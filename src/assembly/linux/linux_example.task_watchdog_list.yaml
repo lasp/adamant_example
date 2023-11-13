@@ -1,0 +1,20 @@
+---
+description: Configure the task watchdog for the example assembly.
+petters:
+  - name: Slow_Rate_Group
+    connector_name: Slow_Rate_Group.Pet_T_Send
+    description: Slow rate group monitoring.
+    limit: 3
+    action: error_fault
+    critical: False # Make True to stop servicing downstream HW watchdog
+    fault_id: 1
+  - name: Fast_Rate_Group
+    connector_name: Fast_Rate_Group.Pet_T_Send
+    description: Fast rate group monitoring.
+    limit: 3
+    action: error_fault
+    critical: False # Make True to stop servicing downstream HW watchdog
+    fault_id: 2
+  # We don't need to monitor the Watchdog_Rate_Group since the
+  # task watchdog is on that rate group. That makes it a defacto critical
+  # task, which will stop petting the watchdog if it freezes up.

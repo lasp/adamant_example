@@ -1,0 +1,11 @@
+---
+description: Commands for the counter component
+commands:
+  - name: Set_Count
+    description: Change the current counter value in the counter component
+    arg_type: Packed_U32.T
+  - name: Reset_Count
+    description: Reset the current counter value in the counter component to zero
+  - name: Set_Count_Add
+    description: Change the current counter value in the counter component to the sum of the arguments
+    arg_type: Operands.T

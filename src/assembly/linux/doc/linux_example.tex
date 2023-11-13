@@ -1,0 +1,80 @@
+\input{common_packages.tex}
+
+\begin{document}
+
+\title{\textbf{Linux Example} \\
+\large\textit{Assembly Design Document}}
+\date{}
+\maketitle
+
+\section{Description}
+\input{build/tex/linux_example_description.tex}
+
+\section{Design}
+
+\subsection{At a Glance}
+\input{build/tex/linux_example_stats.tex}
+
+\subsection{Components}
+All of the components in the Linux Example assembly are reusable components that can be found within the Adamant repository (in \textit{src/components/}) with a few exceptions:
+
+\vspace{5mm} %5mm vertical space
+\begin{spaceditemize}
+  \item \textbf{\texttt{\url{Counter}}} - This is an extremely simple component that produces an incrementing counter as telemetry.
+  \item \textbf{\texttt{\url{Fault_Producer}}} - This is an component that can be used to inject a fault into the system via command.
+  \item \textbf{\texttt{\url{Oscillator}}} - This is a simple component that produces two sinusoidal outputs into telemetry. 
+  \item \textbf{\texttt{\url{Parameter_Manager}}} - This component demonstrates how parameter tables can be copied between a non-volatile store and an active (in-use) parameter store.
+  \item \textbf{\texttt{\url{Interrupt_Responder}}} - This is a simple component that receives a tick when an interrupt is received. It processes this interrupt by printing the interrupt's time stamp to the terminal.
+\end{spaceditemize}
+\vspace{5mm} %5mm vertical space
+
+These specific component are located in the Example repository in \textit{src/components/}. A full list of the components included in the assembly can be seen below. Note that components marked as active execute on their own task within the Ada runtime.
+
+\input{build/tex/linux_example_components.tex}
+
+\subsection{Views}
+
+This section shows the example assembly visually as a set of \textit{views}. Each shows a specific set of components and connections (while not showing other components and connections) in order to highlight a particular function of the assembly. Components that are bold are \textit{active}, meaning they have an Ada task assigned to them. Connections are labeled with the type that is passed along them. A dotted line indicates that the connection is asynchronous, meaning the data is put onto a queue for later processing. A solid line indicates that the connection is synchronous, meaning processing of that data occurs right when the data is passed along the connector.
+
+\input{build/tex/linux_example_views.tex}
+
+\subsection{Task Priorities}
+\input{build/tex/linux_example_priorities.tex}
+
+\subsection{Commands}
+
+\input{build/tex/linux_example_commands.tex}
+
+\subsection{Parameters}
+
+\input{build/tex/linux_example_parameters.tex}
+
+\subsection{Events}
+
+\input{build/tex/linux_example_events.tex}
+
+\subsection{Data Products}
+
+\input{build/tex/linux_example_data_products.tex}
+
+\subsection{Packets}
+
+\input{build/tex/linux_example_packets.tex}
+
+\subsection{Faults}
+
+\input{build/tex/linux_example_faults.tex}
+
+\section{Appendix}
+\subsection{Connections}
+\input{build/tex/linux_example_connections.tex}
+
+\subsection{Packed Types}
+
+\input{build/tex/linux_example_types.tex}
+
+\subsection{Enumerations}
+
+\input{build/tex/linux_example_enums.tex}
+
+\end{document}

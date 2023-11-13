@@ -1,0 +1,21 @@
+---
+description: Events for the oscillator component
+events:
+  - name: Frequency_Value_Set
+    description: A new frequency value was set by command
+    param_type: Packed_F32.T
+  - name: Amplitude_Value_Set
+    description: A new amplitude value was set by command
+    param_type: Packed_F32.T
+  - name: Offset_Value_Set
+    description: A new offset value was set by command
+    param_type: Packed_F32.T
+  - name: Dropped_Command
+    description: The component's queue overflowed and the command was dropped.
+    param_type: Command_Header.T
+  - name: Invalid_Command_Received
+    description: A command was received with invalid parameters.
+    param_type: Invalid_Command_Info.T
+  - name: Invalid_Parameter_Received
+    description: A parameter was received with invalid parameters.
+    param_type: Invalid_Parameter_Info.T

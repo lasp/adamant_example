@@ -1,0 +1,8 @@
+<hydraDef>
+  <!-- Send commands to socket -->
+  <decoderDef name="commandDecoder">
+    <outBuffer size="1300"/>
+    <outputDevice name="socket"/>
+    <outputDevice name="uplinkFile"/>
+  </decoderDef>
+</hydraDef>

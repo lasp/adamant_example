@@ -1,0 +1,6 @@
+---
+description: These are the commands for the Parameter Manager component.
+commands:
+  - name: Copy_Parameter_Table
+    description: Copy parameter table from source to destination based on the enumeration provided.
+    arg_type: Packed_Parameter_Table_Copy_Type.T

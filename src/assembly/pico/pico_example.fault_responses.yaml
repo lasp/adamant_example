@@ -1,0 +1,27 @@
+---
+description: This is the fault response table for the Pico Example assembly.
+fault_responses:
+  - fault: Task_Watchdog_Instance.Slow_Rate_Group_Fault
+    latching: True
+    startup_state: enabled
+    command_response: Command_Router_Instance.Noop_Arg
+    command_arg: (Value => 1)
+    description: Throw noop with value 1 if this fault occurs.
+  - fault: Task_Watchdog_Instance.Fast_Rate_Group_Fault
+    latching: True
+    startup_state: enabled
+    command_response: Command_Router_Instance.Noop_Arg
+    command_arg: (Value => 2)
+    description: Throw noop with value 2 if this fault occurs.
+  - fault: Fault_Producer_Instance.Fault_1
+    latching: False
+    startup_state: enabled
+    command_response: Command_Router_Instance.Noop_Arg
+    command_arg: (Value => 3)
+    description: Throw noop with value 3 if this fault occurs.
+  - fault: Fault_Producer_Instance.Fault_2
+    latching: False
+    startup_state: enabled
+    command_response: Command_Router_Instance.Noop_Arg
+    command_arg: (Value => 4)
+    description: Throw noop with value 4 if this fault occurs.

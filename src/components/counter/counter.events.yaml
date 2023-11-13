@@ -1,0 +1,20 @@
+---
+description: Events for the counter component
+events:
+  - name: Set_Count_Command_Received
+    description: Received a Set_Count command.
+    param_type: Packed_U32.T
+  - name: Reset_Count_Command_Received
+    description: Received a Reset_Count command.
+  - name: Set_Count_Add_Command_Received
+    description: Received a Set_Count_Add command.
+    param_type: Operands.T
+  - name: Sending_Value
+    description: Sending the current value out as data product.
+    param_type: Packed_U32.T
+  - name: Dropped_Command
+    description: The component's queue overflowed and the command was dropped.
+    param_type: Command_Header.T
+  - name: Invalid_Command_Received
+    description: A command was received with invalid parameters.
+    param_type: Invalid_Command_Info.T

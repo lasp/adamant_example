@@ -1,0 +1,26 @@
+<hydraDef>
+  <frameDef name="Sync_Pattern">
+    <field>
+      <itemDef name="SyncByte0" type="U8" value="0xFE"/>
+      <itemDef name="SyncByte1" type="U8" value="0xD4"/>
+      <itemDef name="SyncByte2" type="U8" value="0xAF"/>
+      <itemDef name="SyncByte3" type="U8" value="0xEE"/>
+    </field>
+  </frameDef>
+  <frameDef name="SerialSyncHeader">
+    <field>
+      <frameCopy name="Sync_Pattern" prefix="SerialSyncHeader-"/>
+      <frameCopy name="Ccsds_Primary_Header" prefix="SerialSyncHeader-"/>
+      <placeholder/>
+        <!--<itemDef name="SerialSyncHeader-Crc" type="U16" value="0x0000"/>-->
+    </field>
+    <length item="SerialSyncHeader-Ccsds_Primary_Header.SerialSyncHeader-Ccsds_Primary_Header-Packet_Length" offset="8"/>
+      <!--<checksum item="SerialSyncHeader-Crc" start="SerialSyncHeader-Ccsds_Primary_Header" method="crc" poly="0x11021" stop="END" width="16" seed="0xFFFF"/>-->
+  </frameDef>
+  <frameDef name="SerialUplinkSyncHeader">
+    <field>
+      <frameCopy name="Sync_Pattern" prefix="SerialUplinkSyncHeader-"/>
+      <placeholder/>
+    </field>
+  </frameDef>
+</hydraDef>

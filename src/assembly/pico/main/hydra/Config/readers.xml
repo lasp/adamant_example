@@ -1,0 +1,5 @@
+<hydraDef>
+  <readerHeader name="serialReader" headerSize="10" maxSize="1300" hw="serialPort" decoder="downlinkDecoder" lengthField="SerialSyncHeader.SerialSyncHeader-Ccsds_Primary_Header.SerialSyncHeader-Ccsds_Primary_Header-Packet_Length" offset="1" autoStart="true">
+    <sync pattern="0xFE 0xD4 0xAF 0xEE" length="4"/>
+  </readerHeader>
+</hydraDef>

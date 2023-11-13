@@ -1,0 +1,57 @@
+<hydraDef>
+  <!-- Downlink Decoders -->
+  <!-- Data Product Decoders -->
+  <decoderDef name="dataProductIdDecoder" updateDB="enabled">
+    <frameID name="Data_Product.Data_Product-Header-Id" group="1"/>
+  </decoderDef>
+  <decoderDef name="dataProductDecoder" updateDB="enabled" archive="enabled">
+    <frame name="Data_Product"/>
+    <outputDevice name="dataProductIdDecoder"/>
+  </decoderDef>
+  <decoderHdr name="dataProductHeaderStripper" length="4">
+    <outBuffer size="512"/>
+    <outputDevice name="dataProductDecoder"/>
+  </decoderHdr>
+  <!-- Event Decoders -->
+  <decoderDef name="eventIdDecoder" updateDB="enabled">
+    <frameID name="Event.Event-Header-Id" group="2"/>
+  </decoderDef>
+  <decoderDef name="eventDecoder" updateDB="enabled" archive="enabled">
+    <frame name="Event"/>
+    <outputDevice name="eventIdDecoder"/>
+  </decoderDef>
+  <!-- lengthOffset = 11 = event header size -->
+  <decoderSub name="eventSubPacketDecoder" startByte="0" lengthOffset="11" subPktLength="Event_Header.Event_Header-Param_Buffer_Length" maxSubPktSize="524">
+    <outputDevice name="eventDecoder"/>
+  </decoderSub>
+  <decoderHdr name="eventHeaderStripper" length="14"> <!-- 14 is ccsds header (6) + timestamp length (8) -->
+    <outBuffer size="2000"/>
+    <outputDevice name="eventSubPacketDecoder"/>
+  </decoderHdr>
+  <!-- Packet Decoders -->
+  <decoderDef name="packetIdDecoder" updateDB="enabled">
+    <frameID name="Ccsds_Space_Packet.Ccsds_Space_Packet-Header-Apid" group="555"/>
+    <!-- Send event post-mortum packets to the log dump -->
+    <outputDevice name="eventPostMortumFile" frameID="98"/>
+  </decoderDef>
+  <decoderDef name="packetDecoder" updateDB="enabled" archive="enabled">
+    <frame name="Ccsds_Space_Packet"/>
+    <outputDevice name="packetIdDecoder"/>
+  </decoderDef>
+  <!-- Top Level Decoders -->
+  <decoderDef name="downlinkPacketSorter" updateDB="disabled">
+    <frameID name="Ccsds_Space_Packet.Ccsds_Space_Packet-Header-Apid"/>
+    <outputDevice name="packetDecoder" frameID="0-97"/>
+    <outputDevice name="eventHeaderStripper" frameID="98"/>
+  </decoderDef>
+  <decoderDef name="downlinkPacketDecoder" updateDB="disabled">
+    <frame name="Ccsds_Space_Packet"/>
+    <outputDevice name="downlinkPacketSorter"/>
+  </decoderDef>
+  <decoderHdr name="downlinkSyncRemover" updateDB="disabled" length="4">
+    <outputDevice name="downlinkPacketDecoder"/>
+  </decoderHdr>
+  <decoderDef name="downlinkDecoder" updateDB="enabled">
+    <outputDevice name="downlinkSyncRemover"/>
+  </decoderDef>
+</hydraDef>

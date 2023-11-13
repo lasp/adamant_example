@@ -1,0 +1,12 @@
+---
+description: Data products for the ADC data collector component.
+data_products:
+  - name: Channel_0
+    description: The ADC reading at Channel 0 in microvolts.
+    type: Packed_Integer.T
+  - name: Vsys
+    description: The ADC reading of the system voltage in microvolts.
+    type: Packed_Integer.T
+  - name: Temperature
+    description: The ADC temperature reading in Celsius.
+    type: Packed_Integer.T

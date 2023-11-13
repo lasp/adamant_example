@@ -1,0 +1,19 @@
+---
+description: This component demonstrates how to include and use a C++ library within an Adamant component.
+execution: passive
+init:
+  description: "The init subprogram used to set the rollover limit for the C++ counter class."
+  parameters:
+    - name: Limit
+      type: Interfaces.Unsigned_32
+      description: "The limit at which to roll the counter back to zero."
+connectors:
+  - description: The schedule invokee connector
+    type: Tick.T
+    kind: recv_sync
+  - description: The event send connector
+    type: Event.T
+    kind: send
+  - description: The system time is retrieved via this connector.
+    return_type: Sys_Time.T
+    kind: get

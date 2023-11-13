@@ -1,0 +1,19 @@
+build/
+.vagrant
+.Trash*
+.pyenv/
+*.pyc
+__pycache__/
+.tmp
+.DS_Store
+*.swp
+GNAT-*
+*.tmp
+~$*
+.unison*
+
+# Standard alire ignores:
+/alire/
+/config/
+!/config/README.md
+!/config/example.configuration.yaml

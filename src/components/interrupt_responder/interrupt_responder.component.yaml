@@ -1,0 +1,13 @@
+---
+description: This is the Interrupt Responder component.
+execution: passive
+connectors:
+  - description: The schedule invokee connector
+    type: Tick.T
+    kind: recv_sync
+  - description: The event send connector
+    type: Event.T
+    kind: send
+  - description: The system time is retrieved via this connector.
+    return_type: Sys_Time.T
+    kind: get

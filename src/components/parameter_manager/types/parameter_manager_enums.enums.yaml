@@ -1,0 +1,12 @@
+---
+description: These are enumerations defined for the Parameter Manager.
+enums:
+  - name: Parameter_Table_Copy_Type
+    description: This enumeration describes the source and destination of the Parameter Manager copy command.
+    literals:
+      - name: Default_To_Working
+        value: 0
+        description: Copy the parameter table from Default (NVRAM) to Working (RAM).
+      - name: Working_To_Default
+        value: 1
+        description: Copy the parameter table from Working (RAM) to Default (NVRAM).

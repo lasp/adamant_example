@@ -1,0 +1,6 @@
+---
+description: Events for the c_demo component
+events:
+  - name: Current_Count
+    description: Sending the current value out as data product.
+    param_type: Packed_U32.T

@@ -1,0 +1,12 @@
+---
+description: Commands for the Oscillator component
+commands:
+  - name: Set_Frequency
+    description: Set the frequency of the oscillator in Hz
+    arg_type: Packed_F32.T
+  - name: Set_Amplitude
+    description: Set the amplitude of the oscillator
+    arg_type: Packed_F32.T
+  - name: Set_Offset
+    description: Set the Y offset of the oscillator
+    arg_type: Packed_F32.T

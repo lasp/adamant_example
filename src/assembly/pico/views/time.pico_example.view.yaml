@@ -1,0 +1,7 @@
+---
+description: All components in the system fetch time by requesting it from the System_Time_Instance. By implementing the time system at the Adamant architectural level, different time sources and time synchronization schemes can be easily swapped into the system by replacing System_Time_Instance with a more tailored version. Note that synchronous connectors exhibit extremely low overhead, so exposing anything at the architectural level should not be prohibitive in terms of performance.
+filters:
+  - name: time
+    type: connector_type
+    include:
+      - Sys_Time.T

@@ -1,0 +1,31 @@
+#
+# This alire.toml is used to download the Raspberry Pi Pico cross compile
+# dependencies for the Adamant example repository. The Adamant build system
+# then uses these dependencies via the `alr printenv` GPR_BUILD_PATH to
+# compile targets within this repository. This alire.toml itself only points
+# to a simple hello world program that demonstrates tasking, LED blinking,
+# and UART transmition on the Raspberry Pi Pico.
+#
+
+name = "adamant_example"
+description = "Example project for the Adamant software framework."
+version = "1.0.0"
+licenses = "Apache-2.0"
+# Project file lives with the hello pico program:
+project-files = ["src/pico_util/hello_pico/hello_pico.gpr"]
+
+tags = ["embedded", "framework", "demo", "rp2040", "raspberrypi"]
+website = "https://github.com/lasp/example"
+
+[[depends-on]]
+ravenscar_full_rp2040 = "~0.2.0"
+[[pins]]
+ravenscar_full_rp2040 = { url='https://github.com/dinkelk/ravenscar_full_rp2040.git', branch="pico-bsp" }
+
+[configuration.values]
+rp2040_hal.Use_Startup = false
+
+[[depends-on]]
+pico_bsp = "^2.0.0"
+[[pins]]
+pico_bsp = { url='https://github.com/dinkelk/pico_bsp.git', branch="ravenscar" }

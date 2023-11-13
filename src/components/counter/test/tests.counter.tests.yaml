@@ -1,0 +1,7 @@
+---
+description: This is a unit test suite for the counter component
+tests:
+  - name: Test_1
+    description: This unit test excersizes the counter component and makes sure it, well, counts!
+  - name: Test_Commands
+    description: This unit test tests all the commands for the counter component

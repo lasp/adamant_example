@@ -1,0 +1,11 @@
+---
+description: This is a type that contains a left and right side
+fields:
+  - name: Left
+    type: Interfaces.Unsigned_16
+    format: U16
+    description: "The left side"
+  - name: Right
+    type: Interfaces.Unsigned_16
+    format: U16
+    description: "The right side"

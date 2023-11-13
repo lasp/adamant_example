@@ -1,0 +1,4 @@
+*.tar
+docker_container_name.sh
+.Trash
+*.log

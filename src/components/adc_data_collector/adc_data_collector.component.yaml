@@ -1,0 +1,13 @@
+---
+description: This is the ADC data collector component. It periodically collects data values from the Raspberry Pi Pico's ADC and reports them as data products.
+execution: passive
+connectors:
+  - description: The schedule invokee connector
+    type: Tick.T
+    kind: recv_sync
+  - description: The data product invoker connector
+    type: Data_Product.T
+    kind: send
+  - description: The system time is retrieved via this connector.
+    return_type: Sys_Time.T
+    kind: get

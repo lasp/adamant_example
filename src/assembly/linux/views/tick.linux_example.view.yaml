@@ -1,0 +1,7 @@
+---
+description: In this assembly, Tick.T types are used to indicate when periodic or interrupt driven tasks should be run. This view shows the rate groups and interrupts that exist in the assembly. The Interrupt_Servicer_Instance is an active component that sits and waits, ready to execute when a specific interrupt is received. When this interrupt is received, it passes a tick to the Interrupt_Responder_Instance, which performs a task in response to the received interrupt. The Interrupt_Servicer_Instance will then immediately wait again for a subsequent interrupt. The Ticker_Instance runs in a high priority task and produces a Tick.T at 5 Hz. This tick is forwarded to the Tick_Divider_Instance which takes the 5 Hz signal and divides it up among 3 different rate groups. The Slow_Rate_Group runs at 0.5 Hz. The Fast_Rate_Group runs a 5 Hz. The Watchdog_Rate_Group runs as 1 Hz. Each of these rate group components will call the components connected to them every time they receive a tick from upstream. This architecture allows for periodic execution of certain functions, such as collecting telemetry or creating packets. Note that the actual execution of each rate group is also interleaved by the Ada scheduler. Each rate group is an active component, which executes on a task with a priority shown in the top right hand corner of the component. Rate groups produce telemetry relating how long it takes them to execute, both in CPU time and in wall clock time.
+filters:
+  - name: tick_connections
+    type: connector_type
+    include:
+      - Tick.T

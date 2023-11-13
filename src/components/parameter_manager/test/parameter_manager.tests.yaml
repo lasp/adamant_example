@@ -1,0 +1,15 @@
+---
+description: This is a unit test suite for the Parameter Manager component.
+tests:
+  - name: Test_Nominal_Copy_Default_To_Working
+    description: This unit test tests the nominal copy command from default to working.
+  - name: Test_Nominal_Copy_Working_To_Default
+    description: This unit test tests the nominal copy command from working to default.
+  - name: Test_Copy_Failure
+    description: This unit test tests the component's response to a failed parameter table copy.
+  - name: Test_Copy_Timeout
+    description: This unit test tests the component's response when the destination component does not respond to a copy command before a timeout occurs.
+  - name: Test_Full_Queue
+    description: This unit test tests a command or memory region being dropped due to a full queue.
+  - name: Test_Invalid_Command
+    description: This unit test exercises that an invalid command throws the appropriate event.
