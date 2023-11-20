@@ -172,6 +172,13 @@ RUN mkdir -p $PROVISION_DIR/libadalang \
     && mkdir tools \
     && sh install.sh tools
 
+# Install sequence builder:
+FROM base AS install_sequence_builder
+RUN cd $PROVISION_DIR\
+    && DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq wget unzip \
+    && wget https://github.com/lasp/adamant/releases/download/v0.0.0/adamant_seq.zip \
+    && unzip adamant_seq.zip
+
 #
 # This build stage increases the docker image size by several GB. Delaying the
 # configuration of the Ada dependencies to the first time the container is
@@ -199,6 +206,9 @@ RUN mkdir -p $PROVISION_DIR/libadalang \
 
 # Construct the final image from the multi-step build images above:
 FROM adamant_base AS final
+LABEL org.opencontainers.image.source=https://github.com/lasp/adamant
+LABEL org.opencontainers.image.description="Development environment for the Adamant framework"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 USER root
 COPY --from=install_unison $PROVISION_DIR/unison/src/unison $BIN_DIR
 COPY --from=install_unison $PROVISION_DIR/unison/src/unison-fsmonitor $BIN_DIR
@@ -206,6 +216,7 @@ COPY --from=install_redo $PROVISION_DIR/redo/bin/* $BIN_DIR
 COPY --from=install_alire $PROVISION_DIR/alire/bin/alr $BIN_DIR
 COPY --from=install_elf2uf2 $PROVISION_DIR/pico/pico-sdk/tools/elf2uf2/build/elf2uf2 $BIN_DIR
 COPY --from=install_libadalang $PROVISION_DIR/libadalang/libadalang_tool_builder/tools/* $BIN_DIR
+COPY --from=install_sequence_builder $PROVISION_DIR/adamant_seq/bin/* $BIN_DIR
 # COPY --from=install_ada_deps $HOME/.config $HOME/.config
 RUN chown -R $DOCKER_USER:$DOCKER_USER $HOME
 
