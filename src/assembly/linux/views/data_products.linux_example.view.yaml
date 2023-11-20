@@ -1,0 +1,7 @@
+---
+description: Any data product produced by a component during execution is sent synchronously to on onboard storage database, the Product_Database_Instance. This component stores the latest value and timestamp of each data product in the system. Other components, such as the Product_Packetizer_Instance can then fetch these data products at a later time for limit checking, packetization, etc.
+filters:
+  - name: dp_connections
+    type: connector_type
+    include:
+      - Data_Product.T

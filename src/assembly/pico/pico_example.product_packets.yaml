@@ -1,0 +1,15 @@
+---
+description: This is the set of packets for the data product packetizer in the Pico Example assembly.
+packets:
+  - name: Housekeeping_Packet
+    description: This packet contains houskeeping data.
+    id: 1
+    data_products:
+      - name: Oscillator_A.Oscillator_Value
+        use_timestamp: True
+      - name: Oscillator_B.Oscillator_Value
+      # Include all data products from ADC data collector in order.
+      - name: Adc_Data_Collector_Instance.Channel_0
+      - name: Adc_Data_Collector_Instance.Vsys
+      - name: Adc_Data_Collector_Instance.Temperature
+    period: "1" # create every tick

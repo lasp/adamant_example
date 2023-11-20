@@ -1,0 +1,1083 @@
+---
+description: This example assembly is designed to run inside the Adamant Linux build environment. It includes a small collection of components that demonstrate how Adamant can be compiled into a single binary and run on native Linux. In particular, the assembly demonstrates a simple rate group system, commanding, telemetry reporting using events, parameters, data products and packets, and a simple fault detection and correction scheme. Explore the tables and diagrams below to learn more about the design of the example assembly.
+with:
+  - Start_Up
+  - System
+  - Ada.Interrupts.Names
+  - Linux_Example_Event_To_Text
+  - Linux_Example_Product_Packets
+  - Linux_Example_Commands
+  - Linux_Example_Events
+  - Linux_Example_Data_Products
+  - Logger_Enums
+  - Tick_Interrupt_Handler
+  - Logger_Enums
+  - Linux_Example_Task_Watchdog_List
+  - Linux_Example_Fault_Responses
+  - Linux_Example_Parameter_Table
+  - Memory_Map
+prepreamble: |
+  -- Make sure Start_Up is elaborated before the tasks in this package are started.
+  pragma Unreferenced (Start_Up);
+  pragma Elaborate_All (Start_Up);
+preamble: |
+  Dividers : aliased Component.Tick_Divider.Divider_Array_Type := (1 => 5, 2 => 10, 3 => 1);
+########################################
+components:
+########################################
+########################################
+# System time:
+########################################
+  - type: Gps_Time
+    name: System_Time_Instance
+    description: This component provides the system time for the assembly.
+########################################
+# Rate group system:
+########################################
+  - type: Ticker
+    description: This component uses a periodic signal to drive the assembly rate groups.
+    priority: 10
+    stack_size: 50000
+    secondary_stack_size: 10000
+    discriminant:
+      - "Period_Us => 200000" # 1/5 second period
+  - type: Tick_Divider
+    description: This component divides a periodic signal into intervals suitable for the assembly rate groups.
+    init_base:
+      - "Tick_T_Send_Count => 3"
+    init:
+      - "Dividers => Dividers'Access"
+  - type: Rate_Group
+    name: Slow_Rate_Group
+    description: This component provides a 0.5 Hz task for other components to execute on periodically.
+    priority: 9
+    stack_size: 50000
+    secondary_stack_size: 10000
+    init_base:
+      - "Queue_Size => 3 * Slow_Rate_Group.Get_Max_Queue_Element_Size"
+      - "Tick_T_Send_Count => 8"
+    init:
+      - "Ticks_Per_Timing_Report => 10"
+  - type: Rate_Group
+    name: Fast_Rate_Group
+    description: This component provides a 5 Hz task for other components to execute on periodically.
+    priority: 9
+    stack_size: 50000
+    secondary_stack_size: 10000
+    init_base:
+      - "Queue_Size => 3 * Fast_Rate_Group.Get_Max_Queue_Element_Size"
+      - "Tick_T_Send_Count => 3"
+    init:
+      - "Ticks_Per_Timing_Report => 400"
+  - type: Rate_Group
+    name: Watchdog_Rate_Group
+    description: This component provides a 1 Hz task for the watchdog components to execute on periodically.
+    priority: 10
+    stack_size: 50000
+    secondary_stack_size: 10000
+    init_base:
+      - "Queue_Size => 3 * Watchdog_Rate_Group.Get_Max_Queue_Element_Size"
+      - "Tick_T_Send_Count => 1"
+    init:
+      - "Ticks_Per_Timing_Report => 400"
+########################################
+# Command system:
+########################################
+  - type: Ccsds_Command_Depacketizer
+    description: This component converts CCSDS packets containing commands to valid Adamant formatted command types.
+  - type: Command_Router
+    description: This component provides command and command response routing throughout the assembly.
+    priority: 8
+    stack_size: 50000
+    secondary_stack_size: 10000
+    init_base:
+      - "Queue_Size => 10 * Command_Router_Instance.Get_Max_Queue_Element_Size"
+      - "Command_T_Send_Count => 22"
+      - "Command_Response_T_To_Forward_Send_Count => 1"
+    init:
+      - "Max_Number_Of_Commands => Linux_Example_Commands.Number_Of_Commands"
+########################################
+# Event system:
+########################################
+  - type: Event_Text_Logger
+    description: This component prints events in human readable format to the terminal.
+    priority: 1
+    stack_size: 50000
+    secondary_stack_size: 10000
+    discriminant:
+      - "Event_To_Text => Linux_Example_Event_To_Text.Event_To_Text'Access"
+    init_base:
+      - "Queue_Size => 1024"
+  - type: Event_Filter
+    description: This component filters events by ID.
+    init:
+      - "Event_Id_Start_Range => Linux_Example_Events.Minimum_Event_Id"
+      - "Event_Id_End_Range => Linux_Example_Events.Maximum_Event_Id"
+  - type: Event_Limiter
+    description: This component filters out events that spam the system too frequently.
+    init:
+      - "Event_Id_Start => Linux_Example_Events.Minimum_Event_Id"
+      - "Event_Id_Stop => Linux_Example_Events.Maximum_Event_Id"
+      - "Event_Limit_Persistence => 5"
+  - type: Splitter
+    description: This component splits the event stream into a filtered and limited stream and an unfiltered and unlimited stream for the post mortem log.
+    name: Event_Splitter_Instance
+    generic_types:
+      - "T => Event.T"
+    init_base:
+      - "T_Send_Count => 2"
+  - type: Splitter
+    description: This component splits the event stream between events to printed to the terminal and those fowarded out of the socket interface.
+    name: Event_Splitter_2_Instance
+    generic_types:
+      - "T => Event.T"
+    init_base:
+      - "T_Send_Count => 2"
+  - type: Logger
+    name: Event_Post_Mortem_Logger
+    description: This component stores events in a circular buffer on the heap. In an embedded system this log will usually be instantiated in non-volatile memory, so that events can be dumped after a power cycle.
+    generic_types:
+      - "T => Event.T"
+      - "Serialized_Length => Event.Serialized_Length"
+    init:
+      - "Size => 1024 * 100"
+      - "Initial_Mode => Logger_Enums.Logger_Mode.Enabled"
+  - type: Event_Packetizer
+    description: This component gathers events and packetizes them for downlink.
+    init:
+      - "Num_Internal_Packets => 5"
+      - "Partial_Packet_Timeout => 1"
+    set_id_bases:
+      - "Packet_Id_Base => 98"
+########################################
+# Parameter system:
+########################################
+  - type: Parameters
+    description: This component manages the active parameter table and provides parameter updates to any component in the assembly that uses parameters.
+    priority: 3
+    stack_size: 40000
+    secondary_stack_size: 5000
+    init_base:
+      - "Queue_Size => 3 * Parameters_Instance.Get_Max_Queue_Element_Size"
+      - "Parameter_Update_T_Provide_Count => 2"
+    init:
+      - "Parameter_Table_Entries => Linux_Example_Parameter_Table.Parameter_Table_Entries'Access"
+      - "Dump_Parameters_On_Change => True"
+  - type: Parameter_Store
+    description: This component manages the default parameter table, storing it on the heap. In an embedded system the default parameter table will usually be instantiated in non-volatile memory, so that it can be restored after reset.
+    priority: 3
+    stack_size: 40000
+    secondary_stack_size: 5000
+    init_base:
+      - "Queue_Size => 3 * Parameter_Store_Instance.Get_Max_Queue_Element_Size"
+    init:
+      - "Bytes => Memory_Map.Parameter_Store_Bytes_Access"
+      - "Dump_Parameters_On_Change => True"
+  - type: Parameter_Manager
+    description: This component responds to commands to copy parameter tables from the active parameter table to the default parameter table or vice versa.
+    priority: 3
+    stack_size: 30000
+    secondary_stack_size: 5000
+    init_base:
+      - "Queue_Size => 3 * Parameter_Manager_Instance.Get_Max_Queue_Element_Size"
+    set_id_bases:
+      - "Command_Id_Base => 5200"
+    init:
+      - "Parameter_Table_Length => Linux_Example_Parameter_Table.Parameter_Table_Size_In_Bytes"
+      - "Ticks_Until_Timeout => 3"
+########################################
+# Telemetry system:
+########################################
+  - type: Product_Database
+    description: This component serves as the database for data products throughout the system.
+    init:
+      - "Minimum_Data_Product_Id => Linux_Example_Data_Products.Minimum_Data_Product_Id"
+      - "Maximum_Data_Product_Id => Linux_Example_Data_Products.Maximum_Data_Product_Id"
+      - "Send_Event_On_Missing => False"
+  - type: Product_Packetizer
+    description: This component periodically fetches values from the Product Database and packetizes them for downlink.
+    init_base:
+      - "Queue_Size => 3 * Product_Packetizer_Instance.Get_Max_Queue_Element_Size"
+    discriminant:
+      - "packet_List => Linux_Example_Product_Packets.Packet_List'Access"
+    init:
+  - type: Ccsds_Packetizer
+    description: This component converts Adamant formatted packets to CCSDS for downlink.
+  - type: Ccsds_Socket_Interface
+    description: This component receives commands from and sends events and telemetry packets through a TCP/IP Socket.
+    priority: 6
+    stack_size: 50000
+    secondary_stack_size: 10000
+    init_base:
+      - "Queue_Size => 8192"
+    init:
+      - "Addr => \"host.docker.internal\""
+      - "Port => 2003"
+    subtasks:
+      - name: Listener
+        priority: 0
+        stack_size: 20000
+        secondary_stack_size: 5000
+        disabled: False
+  - type: Memory_Packetizer
+    description: This component packetizes the event post mortem log when a dump is requested.
+    priority: 1
+    stack_size: 50000
+    secondary_stack_size: 10000
+    init_base:
+      - "Queue_Size => 1024"
+    init:
+      - "Max_Packets_Per_Time_Period => 10"
+      - "Time_Period_In_Seconds => 1"
+      - "Max_Packet_Ids => 10"
+########################################
+# Interrupt system:
+########################################
+  - type: Interrupt_Servicer
+    description: This component waits for interrupt and, when received, passes it along to the assembly for processing.
+    priority: 1
+    stack_size: 20000
+    secondary_stack_size: 10000
+    generic_types:
+      - "Interrupt_Data_Type => Tick.T"
+      - "Set_Interrupt_Data_Time => Tick_Interrupt_Handler.Set_Tick_Time"
+    discriminant:
+      - "Interrupt_Priority => System.Interrupt_Priority'Last"
+      - "Interrupt_Id => Ada.Interrupts.Names.SIGUSR1"
+      - "Custom_Interrupt_Procedure => Tick_Interrupt_Handler.Handler'Access"
+  - type: Interrupt_Responder
+    description: This component responds to an interrupt.
+########################################
+# Example assembly "mission" components:
+########################################
+  - type: Counter
+    description: This component periodically produces a count data product.
+    set_id_bases:
+      - "Command_Id_Base => 99"
+    init_base:
+      - "Queue_Size => 3 * Counter_Instance.Get_Max_Queue_Element_Size"
+  - type: Oscillator
+    name: Oscillator_A
+    description: This component periodically produces an oscillating data product.
+    init_base:
+      - "Queue_Size => 3 * Oscillator_A.Get_Max_Queue_Element_Size"
+  - type: Oscillator
+    name: Oscillator_B
+    description: This component periodically produces an oscillating data product.
+    init_base:
+      - "Queue_Size => 3 * Oscillator_B.Get_Max_Queue_Element_Size"
+########################################
+# Fault protection system:
+########################################
+  - type: Zero_Divider
+    description: This component responds to a command that divides by zero if received. This can be used to trigger a fault condition within the processor.
+    init:
+      - "Magic_Number => 16#DEADBEEF#"
+  - type: Task_Watchdog
+    description: This component monitors other critical active components (tasks) within the assembly to make sure they continue to run.
+    init_base:
+      - "Pet_T_Recv_Sync_Count => 2"
+    init:
+      - "Task_Watchdog_Entry_Init_List => Linux_Example_Task_Watchdog_List.Task_Watchdog_Entry_Init_List"
+  - type: Fault_Producer
+    description: This component can be used to induce a fault into the system by command.
+    stack_size: 40000
+  - type: Fault_Correction
+    description: This component produces a corrective action (a command) for any fault that is thrown in the system.
+    priority: 11
+    stack_size: 40000
+    secondary_stack_size: 5000
+    init_base:
+      - "Queue_Size => 5 * Fault_Correction_Instance.Get_Max_Queue_Element_Size"
+    init:
+      - "Fault_Response_Configurations => Linux_Example_Fault_Responses.Fault_Response_List"
+########################################
+# FSW monitoring system:
+########################################
+  - type: Cpu_Monitor
+    description: This component produces a packet that includes the CPU usage percentage for each task and interrupt in the system.
+    init:
+      - "Task_List => Task_List'Access"
+      - "Interrupt_List => Interrupt_List'Access"
+  - type: Queue_Monitor
+    description: This component produces a packet that includes the current and maximum queue usage for each component in the system.
+    init:
+      - "Queued_Component_List => Queued_Component_List'Access"
+  - type: Stack_Monitor
+    description: This component produces a packet that includes the maximum stack and secondary stack usage for each component in the system.
+    init:
+      - "Task_List => Task_List'Access"
+      - "Packet_Period => 1"
+########################################
+connections:
+########################################
+  # Time Connections:
+  - from_component: Ticker_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Tick_Divider_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Slow_Rate_Group
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Fast_Rate_Group
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Watchdog_Rate_Group
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Command_Router_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Counter_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Oscillator_A
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Oscillator_B
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Ccsds_Socket_Interface_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Interrupt_Servicer_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Interrupt_Responder_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Event_Packetizer_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Product_Database_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Product_Packetizer_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Ccsds_Command_Depacketizer_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Event_Post_Mortem_Logger
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Memory_Packetizer_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Cpu_Monitor_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Stack_Monitor_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Queue_Monitor_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Event_Filter_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Event_Limiter_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Parameters_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Parameter_Store_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Zero_Divider_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Task_Watchdog_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Fault_Correction_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Parameter_Manager_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  - from_component: Fault_Producer_Instance
+    from_connector: Sys_Time_T_Get
+    to_component: System_Time_Instance
+    to_connector: Sys_Time_T_Return
+  # Rate Group Connections:
+  - from_component: Ticker_Instance
+    from_connector: Tick_T_Send
+    to_component: Tick_Divider_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Tick_Divider_Instance
+    from_connector: Tick_T_Send
+    from_index: 1
+    to_component: Watchdog_Rate_Group
+    to_connector: Tick_T_Recv_Async
+  - from_component: Tick_Divider_Instance
+    from_connector: Tick_T_Send
+    from_index: 2
+    to_component: Slow_Rate_Group
+    to_connector: Tick_T_Recv_Async
+  - from_component: Tick_Divider_Instance
+    from_connector: Tick_T_Send
+    from_index: 3
+    to_component: Fast_Rate_Group
+    to_connector: Tick_T_Recv_Async
+  - description: Schedule connection from the rate group to the counter
+    from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 1
+    to_component: Counter_Instance
+    to_connector: Tick_T_Recv_Sync
+  - description: Schedule connection from the rate group to the packetizer
+    from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 2
+    to_component: Event_Packetizer_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 3
+    to_component: Cpu_Monitor_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 4
+    to_component: Queue_Monitor_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 5
+    to_component: Stack_Monitor_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 6
+    to_component: Event_Filter_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 7
+    to_component: Event_Limiter_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 8
+    to_component: Parameter_Manager_Instance
+    to_connector: Timeout_Tick_Recv_Sync
+  - description: Schedule connection from the rate group to the oscillator
+    from_component: Fast_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 1
+    to_component: Oscillator_A
+    to_connector: Tick_T_Recv_Sync
+  - description: Schedule connection from the rate group to the oscillator
+    from_component: Fast_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 2
+    to_component: Oscillator_B
+    to_connector: Tick_T_Recv_Sync
+  - description: Schedule connection from the rate group to the packetizer
+    from_component: Fast_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 3
+    to_component: Product_Packetizer_Instance
+    to_connector: Tick_T_Recv_Sync
+  - from_component: Watchdog_Rate_Group
+    from_connector: Tick_T_Send
+    from_index: 1
+    to_component: Task_Watchdog_Instance
+    to_connector: Tick_T_Recv_Sync
+  # Event Connections:
+  - from_component: Tick_Divider_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Fast_Rate_Group
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Watchdog_Rate_Group
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Counter_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Oscillator_A
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Oscillator_B
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Ccsds_Socket_Interface_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Product_Packetizer_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Stack_Monitor_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Queue_Monitor_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Cpu_Monitor_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Event_Filter_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Event_Limiter_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Parameters_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Parameter_Store_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Zero_Divider_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Task_Watchdog_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Fault_Correction_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - description: Split the event stream to create a filtered and limited stream for downlink and printing.
+    from_component: Event_Splitter_Instance
+    from_connector: T_Send
+    from_index: 1
+    to_component: Event_Filter_Instance
+    to_connector: Event_T_Recv_Sync
+  - from_component: Event_Filter_Instance
+    from_connector: Event_Forward_T_Send
+    to_component: Event_Limiter_Instance
+    to_connector: Event_T_Recv_Sync
+  - from_component: Event_Limiter_Instance
+    from_connector: Event_Forward_T_Send
+    to_component: Event_Splitter_2_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Event_Splitter_2_Instance
+    from_connector: T_Send
+    from_index: 1
+    to_component: Event_Packetizer_Instance
+    to_connector: Event_T_Recv_Sync
+  - from_component: Event_Splitter_2_Instance
+    from_connector: T_Send
+    from_index: 2
+    to_component: Event_Text_Logger_Instance
+    to_connector: Event_T_Recv_Async
+  - description: Unfiltered and unlimited event stream is passed to the post mortem event logger.
+    from_component: Event_Splitter_Instance
+    from_connector: T_Send
+    from_index: 2
+    to_component: Event_Post_Mortem_Logger
+    to_connector: T_Recv_Sync
+  - from_component: Interrupt_Responder_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Product_Database_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Ccsds_Command_Depacketizer_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Event_Post_Mortem_Logger
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Memory_Packetizer_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Parameter_Manager_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  - from_component: Fault_Producer_Instance
+    from_connector: Event_T_Send
+    to_component: Event_Splitter_Instance
+    to_connector: T_Recv_Sync
+  # Command Response:
+  - from_component: Command_Router_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Counter_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Oscillator_A
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Oscillator_B
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Product_Packetizer_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Event_Packetizer_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Event_Post_Mortem_Logger
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Memory_Packetizer_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Ccsds_Command_Depacketizer_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Product_Database_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Stack_Monitor_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Queue_Monitor_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Cpu_Monitor_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Event_Filter_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Event_Limiter_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Parameters_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Parameter_Store_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Task_Watchdog_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Fault_Correction_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Zero_Divider_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Parameter_Manager_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  - from_component: Fault_Producer_Instance
+    from_connector: Command_Response_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async
+  # Command Routing:
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 1
+    to_component: Command_Router_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 2
+    to_component: Counter_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 3
+    to_component: Oscillator_A
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 4
+    to_component: Oscillator_B
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 5
+    to_component: Product_Packetizer_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 6
+    to_component: Event_Packetizer_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 7
+    to_component: Event_Post_Mortem_Logger
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 8
+    to_component: Memory_Packetizer_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 9
+    to_component: Product_Database_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 10
+    to_component: Ccsds_Command_Depacketizer_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Ccsds_Command_Depacketizer_Instance
+    from_connector: Command_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_T_To_Route_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 11
+    to_component: Stack_Monitor_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 12
+    to_component: Queue_Monitor_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 13
+    to_component: Cpu_Monitor_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 14
+    to_component: Event_Filter_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 15
+    to_component: Event_Limiter_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 16
+    to_component: Parameters_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 17
+    to_component: Parameter_Store_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 18
+    to_component: Zero_Divider_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 19
+    to_component: Fault_Correction_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 20
+    to_component: Task_Watchdog_Instance
+    to_connector: Command_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 21
+    to_component: Parameter_Manager_Instance
+    to_connector: Command_T_Recv_Async
+  - from_component: Command_Router_Instance
+    from_connector: Command_T_Send
+    from_index: 22
+    to_component: Fault_Producer_Instance
+    to_connector: Command_T_Recv_Sync
+  # Command Response Forwarding:
+  - from_component: Command_Router_Instance
+    from_connector: Command_Response_T_To_Forward_Send
+    from_index: 1
+    to_component: Command_Router_Instance
+    to_connector: Command_Response_T_Recv_Async  # Forward the first command response back to the router for noop test
+  # Data Product Connections:
+  - description: Data product connection between the oscillator and packetizer
+    from_component: Oscillator_A
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - description: Data product connection between the oscillator and packetizer
+    from_component: Oscillator_B
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Event_Packetizer_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Ccsds_Command_Depacketizer_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Slow_Rate_Group
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Fast_Rate_Group
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Watchdog_Rate_Group
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Command_Router_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Event_Post_Mortem_Logger
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Memory_Packetizer_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Product_Database_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Stack_Monitor_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Queue_Monitor_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Cpu_Monitor_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Event_Filter_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Event_Limiter_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Task_Watchdog_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  - from_component: Fault_Correction_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
+  # Packetizer Connections:
+  - from_component: Product_Packetizer_Instance
+    from_connector: Data_Product_Fetch_T_Request
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_Fetch_T_Service
+  # Interrupt Connections:
+  - from_component: Interrupt_Servicer_Instance
+    from_connector: Interrupt_Data_Type_Send
+    to_component: Interrupt_Responder_Instance
+    to_connector: Tick_T_Recv_Sync
+  # Uplink connections:
+  - from_component: Ccsds_Socket_Interface_Instance
+    from_connector: Ccsds_Space_Packet_T_Send
+    to_component: Ccsds_Command_Depacketizer_Instance
+    to_connector: Ccsds_Space_Packet_T_Recv_Sync
+  # Memory dump connections:
+  - from_component: Event_Post_Mortem_Logger
+    from_connector: Memory_Dump_Send
+    to_component: Memory_Packetizer_Instance
+    to_connector: Memory_Dump_Recv_Async
+  # Downlink connections:
+  - from_component: Event_Packetizer_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Product_Packetizer_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Counter_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Memory_Packetizer_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Ccsds_Command_Depacketizer_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Product_Database_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Ccsds_Packetizer_Instance
+    from_connector: Ccsds_Space_Packet_T_Send
+    to_component: Ccsds_Socket_Interface_Instance
+    to_connector: Ccsds_Space_Packet_T_Recv_Async
+  - from_component: Cpu_Monitor_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Queue_Monitor_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Stack_Monitor_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Parameters_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Parameter_Store_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Event_Filter_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  - from_component: Event_Limiter_Instance
+    from_connector: Packet_T_Send
+    to_component: Ccsds_Packetizer_Instance
+    to_connector: Packet_T_Recv_Sync
+  # Parameter connections:
+  - from_component: Parameters_Instance
+    from_connector: Parameter_Update_T_Provide
+    from_index: 1
+    to_component: Oscillator_A
+    to_connector: Parameter_Update_T_Modify
+  - from_component: Parameters_Instance
+    from_connector: Parameter_Update_T_Provide
+    from_index: 2
+    to_component: Oscillator_B
+    to_connector: Parameter_Update_T_Modify
+  # Task watchdog pet connections:
+  - from_component: Slow_Rate_Group
+    from_connector: Pet_T_Send
+    to_component: Task_Watchdog_Instance
+    to_connector: Pet_T_Recv_Sync
+    to_index: 1
+  - from_component: Fast_Rate_Group
+    from_connector: Pet_T_Send
+    to_component: Task_Watchdog_Instance
+    to_connector: Pet_T_Recv_Sync
+    to_index: 2
+  - description: The watchdog rate group is checked implicitly since it runs the task watchdog itself.
+    from_component: Watchdog_Rate_Group
+    from_connector: Pet_T_Send
+    to_component: ignore
+    to_connector: ignore
+  - description: This should be attached to a hardware watchdog on an embedded system.
+    from_component: Task_Watchdog_Instance
+    from_connector: Pet_T_Send
+    to_component: ignore
+    to_connector: ignore
+  # Fault connections:
+  - from_component: Task_Watchdog_Instance
+    from_connector: Fault_T_Send
+    to_component: Fault_Correction_Instance
+    to_connector: Fault_T_Recv_Async
+  - from_component: Fault_Producer_Instance
+    from_connector: Fault_T_Send
+    to_component: Fault_Correction_Instance
+    to_connector: Fault_T_Recv_Async
+  - description: We connect the fault correction command response to the command router synchronous connector for the fastest, most reliable execution. This bypasses the command router's queue.
+    from_component: Fault_Correction_Instance
+    from_connector: Command_T_Send
+    to_component: Command_Router_Instance
+    to_connector: Command_T_To_Route_Recv_Sync
+  # Parameter table connections:
+  - from_component: Parameter_Manager_Instance
+    from_connector: Working_Parameters_Memory_Region_Send
+    to_component: Parameters_Instance
+    to_connector: Parameters_Memory_Region_T_Recv_Async
+  - from_component: Parameter_Manager_Instance
+    from_connector: Default_Parameters_Memory_Region_Send
+    to_component: Parameter_Store_Instance
+    to_connector: Parameters_Memory_Region_T_Recv_Async
+  - from_component: Parameter_Store_Instance
+    from_connector: Parameters_Memory_Region_Release_T_Send
+    to_component: Parameter_Manager_Instance
+    to_connector: Parameters_Memory_Region_Release_T_Recv_Sync
+  - from_component: Parameters_Instance
+    from_connector: Parameters_Memory_Region_Release_T_Send
+    to_component: Parameter_Manager_Instance
+    to_connector: Parameters_Memory_Region_Release_T_Recv_Sync

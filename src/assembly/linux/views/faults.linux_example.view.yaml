@@ -1,0 +1,20 @@
+---
+description: Any component that produces faults will send them to the Fault_Correction_Instance. This component maps the fault to a response action. This action is in the form of a correction command which is sent to the Command_Router_Instance synchronously for execution. In the Linux assembly, two components can throw faults. The first is the Task_Watchdog_Instance. This component monitors some critical tasks to ensure that they are always running in a timely fashion. If one stops executing, a fault is thrown. The Fault_Producer_Instance is a simple component that throws a fault when commanded to. This can be used to inject a fault into the system for testing purposes.
+rule: flt_connections | (flt_response & rm_connectors)
+filters:
+  - name: flt_connections
+    type: connector_type
+    include:
+      - Fault.T
+  - name: flt_response
+    type: component_type
+    include:
+      - Fault_Correction
+      - Command_Router
+  - name: rm_connectors
+    type: connector_name
+    exclude:
+      - Command_Router_Instance.Command_T_Send
+      - Command_Router_Instance.Command_Response_T_To_Forward_Send
+      - Command_Router_Instance.Command_Response_T_Send
+      - Command_Router_Instance.Command_Response_T_Recv_Async

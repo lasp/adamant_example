@@ -1,0 +1,7 @@
+---
+description: After a component executes a command received from the Command_Router_Instance, it passes back a Command_Response.T type to the router letting it know if the command succeeded or failed. This connection is also used to register all the commands with the router an initialization. This allows the Command_Router_Instance to create the internal routing table that it uses to route incoming commands.
+filters:
+  - name: reg_connections
+    type: connector_type
+    include:
+      - Command_Response.T

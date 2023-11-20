@@ -1,0 +1,20 @@
+---
+description: Events for the Parameter Manager component.
+events:
+  - name: Starting_Parameter_Table_Copy
+    description: Starting parameter table copy from source to destination.
+    param_type: Packed_Parameter_Table_Copy_Type.T
+  - name: Finished_Parameter_Table_Copy
+    description: Finished parameter table copy from source to destination, without errors.
+    param_type: Packed_Parameter_Table_Copy_Type.T
+  - name: Invalid_Command_Received
+    description: A command was received with invalid parameters.
+    param_type: Invalid_Command_Info.T
+  - name: Parameter_Table_Copy_Timeout
+    description: A timeout occured while waiting for a parameter table copy operation to complete.
+  - name: Parameter_Table_Copy_Failure
+    description: A parameter table copy failed.
+    param_type: Parameters_Memory_Region_Release.T
+  - name: Command_Dropped
+    description: A command was dropped due to a full queue.
+    param_type: Command_Header.T

@@ -1,0 +1,16 @@
+<hydraDef>
+  <!-- macOS serial port -->
+  <!--<hwSerial name="serialPort" port="/dev/tty.usbserial-1230" baud="115200" parity="NONE" stopbits="1"/>-->
+  <hwSerial name="serialPort" port="/dev/tty.usbmodem22402" baud="115200" parity="NONE" stopbits="1"/>
+  <!-- Linux serial port -->
+  <!--<hwSerial name="serialPort" port="/dev/ttyUSB0" baud="115200" parity="NONE" stopbits="1"/>-->
+   
+  <!-- Raw record files (limit to 5 MB so they can be emailed without trouble) -->
+  <hwOutFile name="eventPostMortumFile" prefix="pm_log" maxSize="5000000"/>
+  <hwOutFile name="uplinkFile" prefix="uplink" maxSize="5000000"/>
+  <hwOutFile name="downlinkFile" prefix="downlink" maxSize="5000000"/>
+  <hwOutFile name="rawEventFile" prefix="raw_events" maxSize="5000000"/>
+
+  <!-- File input -->
+  <hwInFile name="inputFile" filename="Files/file.in" interval="10000"/>
+</hydraDef>

@@ -1,0 +1,9 @@
+<hydraDef>
+  <!-- Send commands to via serial -->
+  <decoderDef name="commandDecoder">
+    <outBuffer size="1300"/>
+    <headerFrame name="SerialUplinkSyncHeader"/>
+    <outputDevice name="serialPort"/>
+    <outputDevice name="uplinkFile"/>
+  </decoderDef>
+</hydraDef>

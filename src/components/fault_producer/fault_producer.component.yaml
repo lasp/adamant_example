@@ -1,0 +1,19 @@
+---
+description: This is the fault producer component. It allows you to simulate a fault being triggered in the system by throwing a fault upon command.
+execution: passive
+connectors:
+  - description: The command receive connector.
+    type: Command.T
+    kind: recv_sync
+  - description: This connector is used to register the components commands with the command router component.
+    type: Command_Response.T
+    kind: send
+  - description: The event send connector
+    type: Event.T
+    kind: send
+  - description: The fault send connector
+    type: Fault.T
+    kind: send
+  - description: The system time is retrieved via this connector.
+    return_type: Sys_Time.T
+    kind: get

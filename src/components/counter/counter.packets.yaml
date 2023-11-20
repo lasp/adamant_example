@@ -1,0 +1,7 @@
+---
+description: Packets for the counter component
+packets:
+  - name: Counter_Value
+    id: 7
+    description: The counter value 1.
+    type: Packed_U32.T

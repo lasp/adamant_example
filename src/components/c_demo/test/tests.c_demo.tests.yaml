@@ -1,0 +1,5 @@
+---
+description: This is a unit test suite for the c_demo component.
+tests:
+  - name: Test_C
+    description: This unit test excersizes the c_demo component and makes sure it works correctly.

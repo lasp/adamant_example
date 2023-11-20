@@ -1,0 +1,5 @@
+---
+description: The requirements for the Parameter Manager component are specified below.
+requirements:
+  - text: The component shall copy a parameter table from default to working on command.
+  - text: The component shall copy a parameter table from working to default on command.

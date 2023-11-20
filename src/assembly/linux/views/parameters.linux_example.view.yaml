@@ -1,0 +1,9 @@
+---
+description: This view demonstrates an example usage of the Adamant parameter system. Any component that requires parameters (Oscillator_A and Oscillator_B) receives them from the Parameters_Instance. This component manages the updating and fetching of parameters from any parameter-using components in the system. The Parameter_Store_Instance maintains a memory copy of the parameter table for the entire assembly. This table includes values for each individual parameter used by all the components in the system. In an embedded assembly, this parameter store would usually store the parameter table in a non-volatile memory region. The Parameter_Manager_Instance is responsible for managing commands to copy parameter tables between the Parameter_Store_Instance (usually manages what is called the default parameter table) and the Parameter_Instance (usually manages what is called the active parameter table). Any updates to the active parameter table will cause the Parameters_Instance to push individual parameter updates to the downstream components that need the updated parameters. Note - The current Linux assembly does not include code within the Parameter_Manager_Instance for uploading new parameter tables from a ground system yet.
+filters:
+  - name: param_connections
+    type: connector_type
+    include:
+      - Parameter_Update.T
+      - Parameters_Memory_Region.T
+      - Parameters_Memory_Region_Release.T

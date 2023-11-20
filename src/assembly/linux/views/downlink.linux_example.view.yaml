@@ -1,0 +1,14 @@
+---
+description: Any packet produced by the assembly is sent to the Ccsds_Packetizer_Instance. This component takes the Adamant formatted packets, converts them to CCSDS, and sends them asynchronously to the Ccsds_Socket_Interface_Instance. The socket interface component will take packets stored on its queue and transmit them over a network TCP socket. The Product_Packetizer_Instance periodically requests data products from the Product_Database_Instance to create packets containing data from multiple components. These packets are also forwarded to the Ccsds_Packetizer_Instance for downlink.
+layout: left-to-right
+filters:
+  - name: downlink_connections
+    type: connector_type
+    include:
+      - Packet.T
+      - Data_Product_Fetch.T
+      - Ccsds_Space_Packet.T
+  - name: rm_component
+    type: component_type
+    exclude:
+      - Ccsds_Command_Depacketizer

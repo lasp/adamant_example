@@ -1,0 +1,13 @@
+---
+description: Events are produced by components when something interesting happens. All components send their events to the Event_Splitter_Instance. This components duplicates the event and passes it to two destination components. The first path goes to the Event_Post_Mortem_Logger, which stores the event into a memory store. On an embedded assembly, this would typically be in non-volatile memory. The event is also passed down a different path to the Event_Filter_Instance. This component can enabled/disable individual events by ID. Next, events are forwarded to the Event_Limiter_Instance. This component will start limiting problematic spam events that might flood the system. Any event that passes both of these filtering components is split by the Event_Splitter_2_Instance to two final destinations. The first is the Event_Text_Logger_Instance which prints out human readable events to the Linux terminal. The second is the Event_Packetizer_Instance which collects incoming events into packets for later downlink. This design allows for all events to be stored (unfiltered and unlimited) in the post mortem logger. A filtered and limited event stream is presented to both the Linux terminal and socket.
+filters:
+  - name: evt_connections
+    type: connector_type
+    include:
+      - Event.T
+  - name: rm_connections
+    type: connector_name
+    exclude:
+      - Event_Limiter_Instance.Event_T_Send
+      - Event_Filter_Instance.Event_T_Send
+      - Event_Post_Mortem_Logger.Event_T_Send

@@ -1,0 +1,47 @@
+name: Build the Linux Assembly
+on:
+  push:
+    branches:
+    - master
+  workflow_dispatch:
+jobs:
+  compile_job:
+    name: build_linux_assembly
+    runs-on: ubuntu-latest
+    container:
+      image: dinkelk/adamant:example-latest
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    env:
+      INSTALL_DIR: /home/user/env
+      EXAMPLE_DIR: ${{ github.workspace }}/example
+      ADAMANT_DIR: ${{ github.workspace }}/adamant
+    steps:
+      - run: echo "Starting job triggered by a ${{ github.event_name }} event on a ${{ runner.os }} server hosted by GitHub."
+      - run: echo "Checking out ${{ github.repository }} on branch ${{ github.ref }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          set-safe-directory: true
+          path: example
+      - name: Clone adamant repository
+        uses: actions/checkout@v3
+        with:
+          set-safe-directory: true
+          repository: lasp/adamant
+          token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
+          path: adamant
+          ref: ${{ github.ref }}
+      - name: Get Adamant alire dependencies
+        run: alr -n build --release && alr -n toolchain --select gnat_native && alr -n toolchain --select gprbuild
+        working-directory: ${{ env.ADAMANT_DIR }}
+      - name: Build the Linux binary
+        run: bash example/docker/env/github_run.sh "redo example/src/assembly/linux/main/build/bin/Linux/main.elf"
+      - name: Archive Linux binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux_elf
+          path: example/src/assembly/linux/main/build/bin/Linux/main.elf
+          if-no-files-found: error
+      - run: echo "Finished with status - ${{ job.status }}."

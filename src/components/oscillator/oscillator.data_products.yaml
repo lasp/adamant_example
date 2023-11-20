@@ -1,0 +1,6 @@
+---
+description: Data products for the Oscillator component
+data_products:
+  - name: Oscillator_Value
+    description: The current value of the oscillator.
+    type: Packed_F32.T

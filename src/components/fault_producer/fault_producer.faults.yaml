@@ -1,0 +1,8 @@
+---
+description: Faults for the fault producer component
+faults:
+  - name: Fault_1
+    description: First fault that the component can send.
+  - name: Fault_2
+    description: Second fault that the component can send.
+    param_type: Packed_Natural.T

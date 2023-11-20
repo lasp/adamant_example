@@ -1,0 +1,18 @@
+---
+description: The Ccsds_Socket_Interface_Instance receives data from a ground system on a TCP socket. If the component receives a valid CCSDS packet it forwards it along to the Ccsds_Commmand_Depacketizer_Instance. This component looks for commands in the CCSDS packet, extracts them, and then forwards them along the Command_Router_Instance for routing and later execution.
+layout: left-to-right
+filters:
+  - name: downlink_types
+    type: connector_type
+    include:
+      - Ccsds_Space_Packet.T
+      - Command.T
+  - name: rm_connector
+    type: connector_name
+    exclude:
+      - Command_Router_Instance.Command_T_Send
+  - name: rm_component
+    type: component_type
+    exclude:
+      - Ccsds_Packetizer
+      - Fault_Correction

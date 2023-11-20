@@ -1,0 +1,25 @@
+---
+description: This is the oscillator component.
+execution: passive
+connectors:
+  - description: The schedule invokee connector
+    type: Tick.T
+    kind: recv_sync
+  - description: The command receive connector
+    type: Command.T
+    kind: recv_async
+  - description: The parameter update connector.
+    type: Parameter_Update.T
+    kind: modify
+  - description: This connector is used to register the components commands with the command router component.
+    type: Command_Response.T
+    kind: send
+  - description: The data product invoker connector
+    type: Data_Product.T
+    kind: send
+  - description: The event send connector
+    type: Event.T
+    kind: send
+  - description: The system time is retrieved via this connector.
+    return_type: Sys_Time.T
+    kind: get

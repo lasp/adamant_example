@@ -1,0 +1,9 @@
+---
+description: This view shows how commands are routed throughout the assembly. Commands are contained in the Command.T data type. Commands coming from the ground system originate from the Ccsds_Command_Depacketizer_Instance and then get passed the Command_Router_Instance. The router looks at the command's ID, determines the destination component for which the command is intended, and then forwards the command to that appropriate destination component. When a destination component receives a command, it will execute it and pass a Command_Response.T data type back to the command router (shown in the Command Response View). Note that the Fault_Correction_Instance can also produce commands in order to correct a system fault. Commands from the Fault_Correction_Instance are passed to the router synchronously, bypassing the standard command queue that the Ccsds_Command_Depacketizer_Instance uses.
+layout: left-to-right
+filters:
+  - name: cmd_connections
+    type: connector_type
+    include:
+      - Command.T
+postamble: "{ rank=source; Fault_Correction_Instance, Ccsds_Command_Depacketizer_Instance }"

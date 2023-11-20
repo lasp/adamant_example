@@ -1,0 +1,5 @@
+<hydraDef>
+  <!-- Fixed Reader for socket -->
+  <!--<readerTCP name="socketReader" maxSize="3000" hw="socket" decoder="comPacketDecoder" autoStart="true"/>-->
+  <readerHeader name="socketReader" headerSize="6" maxSize="1300" hw="socket" decoder="downlinkPacketDecoder" lengthField="Ccsds_Primary_Header.Ccsds_Primary_Header-Packet_Length" offset="1" autoStart="true"/>
+</hydraDef>

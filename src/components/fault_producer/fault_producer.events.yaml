@@ -1,0 +1,10 @@
+---
+description: Events for the fault producer component
+events:
+  - name: Sending_Fault_1
+    description: The component received a command to send out fault 1.
+  - name: Sending_Fault_2
+    description: The component received a command to send out fault 2.
+  - name: Invalid_Command_Received
+    description: A command was received with invalid parameters.
+    param_type: Invalid_Command_Info.T

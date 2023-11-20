@@ -1,0 +1,22 @@
+<hydraDef>
+<!-- definitions -->
+<include>./Config/hardware.xml</include>
+<!-- definitions -->
+<include>../../../../../../adamant/gnd/hydra/Config/adamant_types.xml</include>
+<!-- autocoded assembly files -->
+<include>../../build/hydra/Config/pico_example.xml</include>
+<include>../../build/hydra/Config/pico_example_ccsds_commands.xml</include>
+<include>../../build/hydra/Config/pico_example_ccsds_packets.xml</include>
+<!-- Use local uplink decoder -->
+<include>./Config/uplink_decoders.xml</include>
+<!-- readers and downlink decoders -->
+<include>../../../../../gnd/hydra/Config/downlink_decoders.xml</include>
+<include>./Config/serial_types.xml</include>
+<include>./Config/readers.xml</include>
+<!-- Add our local scripts -->
+<scriptDir name="Scripts"/>
+<!-- Add the core scripts -->
+<scriptDir name="../../../../../gnd/hydra/Scripts"/>
+<!-- Add the autocoded scripts -->
+<scriptDir name="../../build/hydra/Scripts"/>
+</hydraDef>

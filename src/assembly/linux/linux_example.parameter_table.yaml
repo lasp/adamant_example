@@ -1,0 +1,10 @@
+---
+description: This is an parameter table layout for the Parameters component in the example assembly.
+parameters_instance_name: Parameters_Instance
+parameters:
+  - Oscillator_A.Frequency
+  - Oscillator_A.Amplitude
+  - Oscillator_A.Offset
+  - Oscillator_B.Frequency
+  - Oscillator_B.Amplitude
+  - Oscillator_B.Offset

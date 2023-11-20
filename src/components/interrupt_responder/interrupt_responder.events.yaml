@@ -1,0 +1,6 @@
+---
+description: Events for the interrupt response component.
+events:
+  - name: Interrupt_Received
+    description: Received an interrupt.
+    param_type: Tick.T

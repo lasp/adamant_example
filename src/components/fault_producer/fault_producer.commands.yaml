@@ -1,0 +1,7 @@
+---
+description: Commands for the fault producer component
+commands:
+  - name: Throw_Fault_1
+    description: Throw the first fault.
+  - name: Throw_Fault_2
+    description: Throw the second fault.
