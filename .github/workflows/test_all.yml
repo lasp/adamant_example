@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: dinkelk/adamant:example-latest
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
     env:
       INSTALL_DIR: /home/user/env
       EXAMPLE_DIR: ${{ github.workspace }}/example
@@ -30,7 +27,6 @@ jobs:
         with:
           set-safe-directory: true
           repository: lasp/adamant
-          token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
           path: adamant
       - name: Get Adamant alire dependencies
         run: alr -n build --release && alr -n toolchain --select gnat_native && alr -n toolchain --select gprbuild
