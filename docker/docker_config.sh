@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DOCKER_CONTAINER_NAME="adamant_example_container"
-DOCKER_IMAGE_NAME="dinkelk/adamant:example-latest"
+DOCKER_IMAGE_NAME="lasp/adamant:example-latest"
 export DOCKER_CONTAINER_NAME
 export DOCKER_IMAGE_NAME
 
