@@ -32,7 +32,6 @@ jobs:
           repository: lasp/adamant
           token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
           path: adamant
-          ref: ${{ github.ref }}
       - name: Get Adamant alire dependencies
         run: alr -n build --release && alr -n toolchain --select gnat_native && alr -n toolchain --select gprbuild
         working-directory: ${{ env.ADAMANT_DIR }}
