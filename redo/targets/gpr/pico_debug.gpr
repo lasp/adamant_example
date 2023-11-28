@@ -16,6 +16,8 @@ project pico_debug extends all "a_bareboard_debug.gpr" is
    -- Specify cross compiler ARM target and Ravenscar runtime:
    for Target use "arm-eabi";
    for Runtime ("Ada") use Ravenscar_Build'Runtime ("Ada");
+   -- C++ not supported for arm-eabi currently.
+   for Languages use ("Ada", "C", "ASM_CPP");
 
    -- Common binder switches:
    package Binder is
