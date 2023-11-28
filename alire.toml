@@ -15,7 +15,7 @@ licenses = "Apache-2.0"
 project-files = ["src/pico_util/hello_pico/hello_pico.gpr"]
 
 tags = ["embedded", "framework", "demo", "rp2040", "raspberrypi"]
-website = "https://github.com/lasp/example"
+website = "https://github.com/lasp/adamant_example"
 
 [[depends-on]]
 ravenscar_full_rp2040 = "~0.2.0"

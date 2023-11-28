@@ -10,24 +10,24 @@ package cpp_lib_hpp is
 
    package Class_Counter is
       type Counter is limited record
-         count : aliased unsigned;  -- /home/user/example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:5
-         limit : aliased cpp_dep_hpp.Class_Container.Container;  -- /home/user/example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:6
+         count : aliased unsigned;  -- /home/user/adamant_example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:5
+         limit : aliased cpp_dep_hpp.Class_Container.Container;  -- /home/user/adamant_example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:6
       end record
       with Import => True,
            Convention => CPP;
 
-      function New_Counter return Counter;  -- /home/user/example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:9
+      function New_Counter return Counter;  -- /home/user/adamant_example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:9
       pragma CPP_Constructor (New_Counter, "_ZN7CounterC1Ev");
 
       procedure initialize
         (this : access Counter;
          initialCount : unsigned;
-         maxLimit : unsigned)  -- /home/user/example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:10
+         maxLimit : unsigned)  -- /home/user/adamant_example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:10
       with Import => True, 
            Convention => CPP, 
            External_Name => "_ZN7Counter10initializeEjj";
 
-      function increment (this : access Counter) return unsigned  -- /home/user/example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:11
+      function increment (this : access Counter) return unsigned  -- /home/user/adamant_example/src/components/cpp_demo/cpp_lib/cpp_lib.hpp:11
       with Import => True, 
            Convention => CPP, 
            External_Name => "_ZN7Counter9incrementEv";

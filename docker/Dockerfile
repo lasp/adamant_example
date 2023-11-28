@@ -2,7 +2,7 @@
 # This Dockerfile needs to be run from within the project/ directory (AKA ../../ from here)
 # so that docker has access to all the files it needs. ie.
 #
-# $ docker build -t $DOCKER_IMAGE_NAME -f example/docker/Dockerfile .
+# $ docker build -t $DOCKER_IMAGE_NAME -f adamant_example/docker/Dockerfile .
 #
 # For best results use the ./build_image.sh and ./create_container.sh scripts
 # provided in this directory.
@@ -53,8 +53,8 @@ FROM base as adamant_base
 
 # Copy files:
 USER $DOCKER_USER
-COPY example/docker/env/provision/bashrc.sh $HOME/.bashrc
-COPY example/docker/env/provision/example.prf $HOME/.unison/example.prf
+COPY adamant_example/docker/env/provision/bashrc.sh $HOME/.bashrc
+COPY adamant_example/docker/env/provision/adamant_example.prf $HOME/.unison/adamant_example.prf
 COPY adamant/env/provision/adamant.prf $HOME/.unison/adamant.prf
 
 # Set up symlink to shared folder:
@@ -189,7 +189,7 @@ RUN cd $PROVISION_DIR\
 #  FROM install_alire AS install_ada_deps
 #  USER root
 #  COPY adamant $HOME/adamant
-#  COPY example $HOME/example
+#  COPY adamant_example $HOME/adamant_example
 #  RUN chown -R $DOCKER_USER:$DOCKER_USER $HOME
 #
 #  # Install Adamant Ada dependencies:
@@ -200,7 +200,7 @@ RUN cd $PROVISION_DIR\
 #      && alr -n toolchain --select gprbuild
 #
 #  # Install Example Ada dependencies:
-#  RUN cd $HOME/example \
+#  RUN cd $HOME/adamant_example \
 #      && alr -n build --release
 #
 
