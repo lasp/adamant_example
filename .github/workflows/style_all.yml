@@ -15,7 +15,7 @@ jobs:
       image: ghcr.io/lasp/adamant:example-latest
     env:
       INSTALL_DIR: /home/user/env
-      EXAMPLE_DIR: ${{ github.workspace }}/example
+      EXAMPLE_DIR: ${{ github.workspace }}/adamant_example
       ADAMANT_DIR: ${{ github.workspace }}/adamant
     steps:
       - run: echo "Starting job triggered by a ${{ github.event_name }} event on a ${{ runner.os }} server hosted by GitHub."
@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           set-safe-directory: true
-          path: example
+          path: adamant_example
       - name: Clone adamant repository
         uses: actions/checkout@v3
         with:
@@ -38,12 +38,12 @@ jobs:
         run: alr -n build --release
         working-directory: ${{ env.EXAMPLE_DIR }}
       - name: Check all style
-        run: bash example/docker/env/github_run.sh "redo example/style_all"
+        run: bash adamant_example/docker/env/github_run.sh "redo adamant_example/style_all"
         continue-on-error: true
       - name: Archive logs for failed style checks
         uses: actions/upload-artifact@v3
         with:
           name: failed_style_logs
-          path: example/build/failed_style_logs
+          path: adamant_example/build/failed_style_logs
           if-no-files-found: ignore
       - run: echo "Finished with status - ${{ job.status }}."

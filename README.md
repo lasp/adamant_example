@@ -1,10 +1,10 @@
 # Adamant Example Project
 
-[![Build the Linux Assembly](https://github.com/lasp/example/actions/workflows/build_linux.yml/badge.svg)](https://github.com/lasp/example/actions/workflows/build_linux.yml)
-[![Build the Pico Assembly](https://github.com/lasp/example/actions/workflows/build_pico.yml/badge.svg)](https://github.com/lasp/example/actions/workflows/build_pico.yml)
-[![Run All Unit Tests](https://github.com/lasp/example/actions/workflows/test_all.yml/badge.svg)](https://github.com/lasp/example/actions/workflows/test_all.yml)
-[![Check Style](https://github.com/lasp/example/actions/workflows/style_all.yml/badge.svg)](https://github.com/lasp/example/actions/workflows/styl_all.yml)
-[![Build All Documentation](https://github.com/lasp/example/actions/workflows/publish_all.yml/badge.svg)](https://github.com/lasp/example/actions/workflows/publish_all.yml)
+[![Build the Linux Assembly](https://github.com/lasp/adamant_example/actions/workflows/build_linux.yml/badge.svg)](https://github.com/lasp/adamant_example/actions/workflows/build_linux.yml)
+[![Build the Pico Assembly](https://github.com/lasp/adamant_example/actions/workflows/build_pico.yml/badge.svg)](https://github.com/lasp/adamant_example/actions/workflows/build_pico.yml)
+[![Run All Unit Tests](https://github.com/lasp/adamant_example/actions/workflows/test_all.yml/badge.svg)](https://github.com/lasp/adamant_example/actions/workflows/test_all.yml)
+[![Check Style](https://github.com/lasp/adamant_example/actions/workflows/style_all.yml/badge.svg)](https://github.com/lasp/adamant_example/actions/workflows/styl_all.yml)
+[![Build All Documentation](https://github.com/lasp/adamant_example/actions/workflows/publish_all.yml/badge.svg)](https://github.com/lasp/adamant_example/actions/workflows/publish_all.yml)
 
 This repository contains an example project which utilizes the [Adamant](https://github.com/lasp/adamant) software framework. Its purpose is to demonstrate how the framework can be used to create components, unit test components, and connect those components together into an executable assembly.
 
@@ -21,8 +21,8 @@ The project can be compiled for two different targets, a Linux desktop environme
 
 ## Need Help?
 
- * Have a question or suggestion? Please use the project's [discussions](https://github.com/lasp/example/discussions).
- * Find a bug? Please [submit an issue](https://github.com/lasp/example/issues).
+ * Have a question or suggestion? Please use the project's [discussions](https://github.com/lasp/adamant_example/discussions).
+ * Find a bug? Please [submit an issue](https://github.com/lasp/adamant_example/issues).
 
 ## Contributing
 

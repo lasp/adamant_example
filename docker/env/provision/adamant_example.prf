@@ -1,17 +1,17 @@
-# Unison profile for syncing the "example" directory
+# Unison profile for syncing the "adamant_example" directory
 # between two locations
 
 # Set the root directories for the sync
-root = /home/user/example
-root = /share/example
+root = /home/user/adamant_example
+root = /share/adamant_example
 
 # Set the options for the sync
 silent = true
 batch = true
 fastcheck = true
-logfile = /home/user/.unison/example.log
+logfile = /home/user/.unison/adamant_example.log
 times = true
-prefer = /home/user/example
+prefer = /home/user/adamant_example
 repeat = watch+20
 maxsizethreshold = 20000
 sortbysize = true

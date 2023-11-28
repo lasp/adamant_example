@@ -16,11 +16,11 @@ safe_copy() {
 
 echo "Copying shared repositories to /home/user to optimize build speed."
 safe_copy /share/adamant $home/adamant
-safe_copy /share/example $home/example
+safe_copy /share/adamant_example $home/adamant_example
 
 # Start unison:
 echo "Starting Unison."
-/share/example/docker/env/start_unison.sh &
+/share/adamant_example/docker/env/start_unison.sh &
 
 # Set up alire:
 echo "Setting up Alire build dependencies."
@@ -29,6 +29,6 @@ cd /home/user/adamant
 alr -n build --release
 alr -n toolchain --select gnat_native
 alr -n toolchain --select gprbuild
-cd /home/user/example
+cd /home/user/adamant_example
 alr -n build --release
 echo "Done."
