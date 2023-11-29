@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pageDef>
+  <updateRate ms="1000"/>
+  <page title="test">
+    <column>
+      <section name="Data products:">
+        <row label="Counter Value:" item="Ccsds-Counter_Instance-Counter_Value-Value"/>
+        <row label="Oscillator A Value:" item="Ccsds-Housekeeping_Packet-Oscillator_A-Oscillator_Value-Value"/>
+        <row label="Oscillator B Value:" item="Ccsds-Housekeeping_Packet-Oscillator_B-Oscillator_Value-Value"/>
+      </section>
+    </column>
+    <column>
+        <chart title="Counter Plot" update="2000" interval="20000">
+          <line item="Ccsds-Counter_Instance-Counter_Value-Value" color="green"/>
+        </chart>
+        <chart title="Oscillator Plot" update="200" interval="20000">
+          <line item="Ccsds-Housekeeping_Packet-Oscillator_A-Oscillator_Value-Value" color="blue"/>
+          <line item="Ccsds-Housekeeping_Packet-Oscillator_B-Oscillator_Value-Value" color="red"/>
+        </chart>
+    </column>
+  </page>
+</pageDef>
