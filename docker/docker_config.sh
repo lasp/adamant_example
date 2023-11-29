@@ -6,8 +6,8 @@ export DOCKER_CONTAINER_NAME
 export DOCKER_IMAGE_NAME
 
 case "$OSTYPE" in
-  linux-gnu)
-    ON_LINUX="yes"
+  linux*)
+    ON_LINUX="--add-host=host.docker.internal:host-gateway"
     export ON_LINUX
     ;;
 esac
