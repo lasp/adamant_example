@@ -143,7 +143,11 @@ Hydra will connect to the serial port on your host machine. You can tell Hydra t
 <hwSerial name="serialPort" port="/dev/tty.usbmodem22402" baud="115200" parity="NONE" stopbits="1"/>
 ```
 
-to the USB serial port from the Pico on your PC.
+to the USB serial port from the Pico on your PC. To find the device file for your USB port, use the following command:
+
+```
+$ ls /dev/tty*
+```
 
 Next, open Hydra on your host machine and select your project directory as `src/assembly/pico/main/hydra`.
 Hydra will start up and you should see events being received every two seconds from the Pico over the UART in the main panel.
