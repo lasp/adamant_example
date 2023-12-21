@@ -39,7 +39,7 @@ package body Tests.Implementation is
    -- Tests:
    -------------------------------------------------------------------------
 
-   -- This unit test excersizes the counter component and makes sure it, well, counts!
+   -- This unit test exercises the counter component and makes sure it, well, counts!
    overriding procedure Test_1 (Self : in out Instance) is
       Value : Packed_U32.T;
    begin
@@ -64,7 +64,7 @@ package body Tests.Implementation is
 
    -- This unit test tests all the commands for the counter component
    overriding procedure Test_Commands (Self : in out Instance) is
-      -- Helper function which sends arbitraty numbers times.
+      -- Helper function which sends arbitrary numbers times.
       procedure Go is
       begin
          Self.Tester.Tick_T_Send ((Time => (1, 1), Count => 1));

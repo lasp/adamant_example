@@ -142,7 +142,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Response_Twice := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy to working should have occured now. Check data:
+      -- Copy to working should have occurred now. Check data:
       Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
       Parameters_Memory_Region_Assert.Eq (
          T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (1),
@@ -190,7 +190,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Response_Twice := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy to working should have occured now. Check data:
+      -- Copy to working should have occurred now. Check data:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
       Parameters_Memory_Region_Assert.Eq (
          T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
@@ -241,7 +241,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Response := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occured now. Check data:
+      -- Copy from working should have occurred now. Check data:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
       Parameters_Memory_Region_Assert.Eq (
          T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
@@ -276,7 +276,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Response_Twice := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occured now. Check data:
+      -- Copy from working should have occurred now. Check data:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 2);
       Parameters_Memory_Region_Assert.Eq (
          T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (2),
@@ -315,7 +315,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Response_Twice := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occured now. Check data:
+      -- Copy from working should have occurred now. Check data:
       Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 2);
       Parameters_Memory_Region_Assert.Eq (
          T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (2),
@@ -354,7 +354,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Response := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occured now. Check data:
+      -- Copy from working should have occurred now. Check data:
       Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 3);
       Parameters_Memory_Region_Assert.Eq (
          T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (3),
@@ -394,7 +394,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Timeout := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occured now. Check data:
+      -- Copy from working should have occurred now. Check data:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
       Parameters_Memory_Region_Assert.Eq (
          T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
@@ -423,7 +423,7 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Send_Timeout := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occured now. Check data:
+      -- Copy from working should have occurred now. Check data:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
       -- No copy to default:
       Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);

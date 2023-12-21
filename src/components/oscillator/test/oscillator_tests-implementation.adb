@@ -35,7 +35,7 @@ package body Oscillator_Tests.Implementation is
    -- Tests:
    -------------------------------------------------------------------------
 
-   -- This unit test excersizes the parameters within the component
+   -- This unit test exercises the parameters within the component
    overriding procedure Test_Parameters (Self : in out Instance) is
       T : Component.Oscillator.Implementation.Tester.Instance_Access renames Self.Tester;
 

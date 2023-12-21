@@ -44,7 +44,7 @@ private
       Parameter_Table_Length : Natural := 0;
       -- Temporary storage to allow safe copying between Default and Working.
       -- We declare this here, instead of as a temporary variable within a function
-      -- because if a timeout error occurs, we have no gaurantee that the downstream
+      -- because if a timeout error occurs, we have no guarantee that the downstream
       -- component is not reading/writing from this data. If it is declared here, then
       -- at least only this data can be corrupted, and not the stack, which would be
       -- a much worse situation. The assembly should be designed that timeout errors

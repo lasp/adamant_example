@@ -102,7 +102,7 @@ package Component.Parameter_Manager.Implementation.Tester is
    overriding procedure Finished_Parameter_Table_Copy (Self : in out Instance; Arg : in Packed_Parameter_Table_Copy_Type.T);
    -- A command was received with invalid parameters.
    overriding procedure Invalid_Command_Received (Self : in out Instance; Arg : in Invalid_Command_Info.T);
-   -- A timeout occured while waiting for a parameter table copy operation to complete.
+   -- A timeout occurred while waiting for a parameter table copy operation to complete.
    overriding procedure Parameter_Table_Copy_Timeout (Self : in out Instance);
    -- A parameter table copy failed.
    overriding procedure Parameter_Table_Copy_Failure (Self : in out Instance; Arg : in Parameters_Memory_Region_Release.T);

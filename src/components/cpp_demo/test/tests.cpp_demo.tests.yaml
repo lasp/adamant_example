@@ -2,4 +2,4 @@
 description: This is a unit test suite for the cpp_demo component.
 tests:
   - name: Test_Cpp
-    description: This unit test excersizes the cpp_demo component and makes sure it works correctly.
+    description: This unit test exercises the cpp_demo component and makes sure it works correctly.

@@ -14,7 +14,7 @@ private
    overriding procedure Set_Up_Test (Self : in out Instance);
    overriding procedure Tear_Down_Test (Self : in out Instance);
 
-   -- This unit test excersizes the c_demo component and makes sure it works
+   -- This unit test exercises the c_demo component and makes sure it works
    -- correctly.
    overriding procedure Test_Cpp (Self : in out Instance);
 
