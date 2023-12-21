@@ -39,11 +39,12 @@ jobs:
         working-directory: ${{ env.EXAMPLE_DIR }}
       - name: Run all unit tests
         run: bash adamant_example/docker/env/github_run.sh "redo adamant_example/test_all"
-        continue-on-error: true
       - name: Archive logs for failed unit tests
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: failed_test_logs
           path: adamant_example/build/failed_test_logs
           if-no-files-found: ignore
       - run: echo "Finished with status - ${{ job.status }}."
+        if: always()

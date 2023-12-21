@@ -20,7 +20,7 @@ begin
    --   The Pico's power regulator dynamically adjusts it's switching frequency
    --   based on load. This introduces noise that can affect ADC readings. The
    --   Pico datasheet recommends setting Power Save pin high while performing
-   --   ADC measurements to minimize this noise, at tne expense of higher power
+   --   ADC measurements to minimize this noise, at the expense of higher power
    --   consumption.
    Pico.SMPS_PS.Configure (Output, Pull_Up);
    Pico.SMPS_PS.Clear;

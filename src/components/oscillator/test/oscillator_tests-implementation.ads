@@ -14,7 +14,7 @@ private
    overriding procedure Set_Up_Test (Self : in out Instance);
    overriding procedure Tear_Down_Test (Self : in out Instance);
 
-   -- This unit test excersizes the parameters within the component
+   -- This unit test exercises the parameters within the component
    overriding procedure Test_Parameters (Self : in out Instance);
 
    -- Test data and state:

@@ -126,7 +126,7 @@ package Component.Counter.Implementation.Tester is
    not overriding function Dispatch_N (Self : in out Instance; N : in Positive := 1) return Natural;
 
    ---------------------------------------
-   -- Auxillery test functions:
+   -- Auxiliary test functions:
    ---------------------------------------
    function Check_Count (Self : in Instance; Value : in Unsigned_32) return Boolean;
 

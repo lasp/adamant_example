@@ -33,7 +33,7 @@ package body Tests.Implementation is
    -- Tests:
    -------------------------------------------------------------------------
 
-   -- This unit test excersizes the c_demo component and makes sure it works
+   -- This unit test exercises the c_demo component and makes sure it works
    -- correctly.
    overriding procedure Test_C (Self : in out Instance) is
       T : Component.C_Demo.Implementation.Tester.Instance_Access renames Self.Tester;

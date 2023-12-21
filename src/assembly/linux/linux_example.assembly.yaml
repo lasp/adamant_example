@@ -127,7 +127,7 @@ components:
     init_base:
       - "T_Send_Count => 2"
   - type: Splitter
-    description: This component splits the event stream between events to printed to the terminal and those fowarded out of the socket interface.
+    description: This component splits the event stream between events to printed to the terminal and those forwarded out of the socket interface.
     name: Event_Splitter_2_Instance
     generic_types:
       - "T => Event.T"

@@ -14,7 +14,7 @@ private
    overriding procedure Set_Up_Test (Self : in out Instance);
    overriding procedure Tear_Down_Test (Self : in out Instance);
 
-   -- This unit test excersizes the counter component and makes sure it, well, counts!
+   -- This unit test exercises the counter component and makes sure it, well, counts!
    overriding procedure Test_1 (Self : in out Instance);
    -- This unit test tests all the commands for the counter component
    overriding procedure Test_Commands (Self : in out Instance);

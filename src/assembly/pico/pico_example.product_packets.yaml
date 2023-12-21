@@ -2,7 +2,7 @@
 description: This is the set of packets for the data product packetizer in the Pico Example assembly.
 packets:
   - name: Housekeeping_Packet
-    description: This packet contains houskeeping data.
+    description: This packet contains housekeeping data.
     id: 1
     data_products:
       - name: Oscillator_A.Oscillator_Value

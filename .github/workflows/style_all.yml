@@ -39,11 +39,12 @@ jobs:
         working-directory: ${{ env.EXAMPLE_DIR }}
       - name: Check all style
         run: bash adamant_example/docker/env/github_run.sh "redo adamant_example/style_all"
-        continue-on-error: true
       - name: Archive logs for failed style checks
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: failed_style_logs
           path: adamant_example/build/failed_style_logs
           if-no-files-found: ignore
       - run: echo "Finished with status - ${{ job.status }}."
+        if: always()
