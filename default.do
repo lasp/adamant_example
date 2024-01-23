@@ -87,4 +87,4 @@ if __name__ == "__main__":
     error.error_abort("default.do: No rule to build '" + sys.argv[1] + "'.")
 
 # Exit fast:
-performance.exit()
+performance.exit(sys.argv[2])

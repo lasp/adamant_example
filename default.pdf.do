@@ -16,4 +16,4 @@ if __name__ == "__main__":
   rule.build(*sys.argv[1:])
 
 # Exit fast:
-performance.exit()
+performance.exit(sys.argv[2])
