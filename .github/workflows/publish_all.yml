@@ -12,11 +12,7 @@ jobs:
     name: test_all
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/lasp/adamant:example-latest
-    env:
-      INSTALL_DIR: /home/user/env
-      EXAMPLE_DIR: ${{ github.workspace }}/adamant_example
-      ADAMANT_DIR: ${{ github.workspace }}/adamant
+      image: ghcr.io/lasp/adamant_example:latest
     steps:
       - run: echo "Starting job triggered by a ${{ github.event_name }} event on a ${{ runner.os }} server hosted by GitHub."
       - run: echo "Checking out ${{ github.repository }} on branch ${{ github.ref }}."
@@ -31,13 +27,7 @@ jobs:
           set-safe-directory: true
           repository: lasp/adamant
           path: adamant
-      - name: Get Adamant alire dependencies
-        run: alr -n build --release && alr -n toolchain --select gnat_native && alr -n toolchain --select gprbuild
-        working-directory: ${{ env.ADAMANT_DIR }}
-      - name: Get example alire dependencies
-        run: alr -n build --release
-        working-directory: ${{ env.EXAMPLE_DIR }}
       - name: Build all documentation
-        run: bash adamant_example/docker/env/github_run.sh "redo adamant_example/publish"
+        run: bash adamant_example/env/github_run.sh "redo adamant_example/publish"
       - run: echo "Finished with status - ${{ job.status }}."
         if: always()
