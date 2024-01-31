@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if test -z "$EXAMPLE_DIR" # ie. /home/user/adamant_example
+then
+  # Set the adamant directory based on the location of this file.
+  export EXAMPLE_DIR=`readlink -f "${BASH_SOURCE[0]}" | xargs dirname | xargs dirname`
+fi
+
+if test -z "$ADAMANT_DIR" # ie. /home/user/adamant
+then
+  # Set the adamant directory based on the location of the example dir.
+  export ADAMANT_DIR=`readlink -f "$EXAMPLE_DIR/../adamant"`
+fi
+
+# Only set the environment once:
+if test -n "$EXAMPLE_ENVIRONMENT_SET"
+then
+  return
+fi
+
+# This script sets up the environment for the example project.
+echo "Setting up Adamant Example environment."
+
+# Set the path to our Adamant configuration file for example:
+export ADAMANT_CONFIGURATION_YAML=$EXAMPLE_DIR/config/example.configuration.yaml
+
+# Activate the Adamant environment:
+. $ADAMANT_DIR/env/activate $EXAMPLE_DIR
+
+# Signify the environment it set up:
+export EXAMPLE_ENVIRONMENT_SET="yes"
+
+echo "Done."

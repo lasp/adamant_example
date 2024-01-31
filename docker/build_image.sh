@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 . ./docker_config.sh
 # Execute the docker machine from the project/ directory so that we have access

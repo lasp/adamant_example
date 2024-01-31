@@ -1,7 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
+try:
+    from util import performance
+except ModuleNotFoundError:
+    import sys
+    sys.stderr.write("Adamant environment not set up! Run:\n    source ~/adamant/env/activate\n")
+    sys.exit(1)
 # Optimize python path:
-from util import performance
 performance.optimize_path()
 
 # Imports
@@ -35,6 +40,8 @@ if __name__ == "__main__":
         from rules.build_clean import build_clean as rule_cls
     elif base == "clean_all":
         from rules.build_clean_all import build_clean_all as rule_cls
+    elif base == "clear_cache":
+        from rules.build_clear_cache import build_clear_cache as rule_cls
     elif base == "what":
         from rules.build_what import build_what as rule_cls
     elif base == "prove":
