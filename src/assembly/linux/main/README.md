@@ -32,13 +32,32 @@ Starting Linux demo... Use Ctrl+C to exit.
 0000168827.862054941 - Counter_Instance.Sending_Value (0x00000091) : (Value = 3)
 ...
 ```
-## Commanding and Telemetry with OpenC3 Cosmos
+## Commanding and Telemetry with OpenC3 COSMOS
 
- ![`Commanding and Telemetry with OpenC3 Cosmos`](img/cosmos.png "Commanding and Telemetry with OpenC3 Cosmos")
+ ![`Commanding and Telemetry with OpenC3 COSMOS`](img/cosmos.png "Commanding and Telemetry with OpenC3 COSMOS")
  
-To best interact with the Linux assembly, we need to use a ground system interface, such as Cosmos. Before installing and running
-Cosmos we need to build the Cosmos plugin configuration files. This will allow Cosmos to decode telemetry from the Linux assembly and properly format
-outgoing commands.
+To best interact with the Linux assembly, we need to use a ground system interface, such as OpenC3 COSMOS. To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
+
+```
+$ git clone https://github.com/openc3/cosmos-project.git
+```
+
+The COSMOS Docker container must be configured to use the same ports as Adamant. Edit this configuration at `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
+
+```
+    ports:
+      - "2003:2003/tcp"
+```
+
+Start COSMOS by navigating to the `cosmos-project` directory and running:
+
+```
+./openc3.sh start
+```
+
+After the containers start, open a web browser and navigate to `http://localhost:2900`. You will be prompted to configure a password, and then presented with the COSMOS interface. Some modules may still be loading, but after a minute the interface should be complete. Navigate to `ADMIN CONSOLE` and uninstall the "openc3-cosmos-demo" plugin by selecting the `Delete Plugin` icon.
+
+After installing and running COSMOS we need to build the Linux Example plugin configuration files. This will allow COSMOS to decode telemetry from the Linux assembly and properly format outgoing commands.
 
 These files are autocoded by Adamant. From the `adamant_example/src/assembly/linux/main` directory in your Adamant environment run:
 
@@ -48,13 +67,7 @@ $ redo cosmos_config
 
 This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory.
 
-To install OpenC3 Cosmos, navigate to an appropriate directory on your host machine and clone the Cosmos example project repository:
-
-```
-$ git clone https://github.com/openc3/cosmos-project.git
-```
-
-OpenC3 Cosmos runs inside of its own Docker containers. The Cosmos example project provides the necessary tools and commands to create an interface plugin from our generated configuration files. Navigate to the `cosmos-project` directory and run:
+OpenC3 COSMOS runs inside of its own Docker containers. The COSMOS example project provides the necessary tools and commands to create an interface plugin from our generated configuration files. Navigate to the `cosmos-project` directory and run:
 
 ```
 $ ./openc3.sh cli generate plugin LINUX_EXAMPLE
@@ -80,19 +93,19 @@ Replace the contents of these text files with the contents of the corresponding 
 adamant_example/src/assembly/linux/build/cosmos/plugin
 ```
 
-The Cosmos plugin uses a default CRC protocol provided by Cosmos, but also needs a custom protocol to apply Adamant's command packet checksum correctly. The protocol file is located in the Adamant directory at:
+The COSMOS plugin uses a default CRC protocol provided by COSMOS, but also needs a custom protocol to apply Adamant's command packet checksum correctly. The protocol file is located in the Adamant directory at:
 
 ```
 adamant/gnd/cosmos/cmd_checksum.rb
 ```
 
-And must be placed in the Cosmos plugin directory at:
+And must be placed in the COSMOS plugin directory at:
 
 ```
 cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/lib/cmd_checksum.rb
 ```
 
-If the Cosmos and Admant example project directories are adjacent, complete the configuration by running:
+If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
 
 ```
 $ cp adamant_example/src/assembly/linux/build/cosmos/plugin/linux_example_ccsds_cosmos_commands.txt cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/cmd_tlm/cmd.txt
@@ -107,20 +120,17 @@ The plugin can now be compiled. Navigate to the plugin directory at `openc3-cosm
 $ ./../openc3.sh cli rake build VERSION=1.0.0
 ```
 
-The Cosmos Docker container must be configured to use the same ports as Adamant. Edit this configuration at `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
-
-```
-    ports:
-      - "2003:2003/tcp"
-```
-
-With the Linux assembly running, start Cosmos by navigating to the `cosmos-project` directory and running `./openc3.sh start`. After the containers start, open a web browser and navigate to `http://localhost:2900`. You will be prompted to configure a password, and then presented with the Cosmos interface. Some modules may still be loading, but after a minute the interface should be complete. Navigate to `ADMIN CONSOLE` and uninstall the "openc3-cosmos-demo" plugin by selecting the `Delete Plugin` icon.
-
 Select `Click to select plugin .gem file to install` and navigate to the compiled plugin gem file at `cosmos-project/openc3-cosmos-linux-example/openc3-cosmos-linux-example-1.0.0.gem` to install our generated plugin. The plugin is templated to allow changing of parameters such as ports, but the default values are already set to correspond with this project.
 
-The plugin will be installed and you should see events being received every two seconds from the Linux assembly over the socket in the `CmdTLMServer` panel.
+The plugin will be installed. Return to the Adamant Linux environment and start the Linux assembly by navigating to `adamant_example/src/assembly/linux/main` and running:
 
-With Cosmos running, here are some interesting things you can try:
+```
+redo run
+```
+
+You should see events being received by COSMOS every two seconds from the Linux assembly over the socket in the `CmdTLMServer` panel.
+
+With COSMOS running, here are some interesting things you can try:
 
  1. View events generated from the Linux assembly in the main panel.
  2. View telemetry from the Counter and Oscillator components by opening the `Telemetry Grapher` panel and selecting the corresponding packets and parameters.
