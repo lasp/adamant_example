@@ -105,16 +105,13 @@ And must be placed in the COSMOS plugin directory at:
 cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/lib/cmd_checksum.rb
 ```
 
-If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
+A helper script, which takes the COSMOS install directory as an argument, is provided to copy the plugin configuration files to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by navigating to `adamant_example/gnd/cosmos` on the host machine and running:
 
 ```
-$ cp adamant_example/src/assembly/linux/build/cosmos/plugin/linux_example_ccsds_cosmos_commands.txt cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/cmd_tlm/cmd.txt
-$ cp adamant_example/src/assembly/linux/build/cosmos/plugin/linux_example_ccsds_cosmos_telemetry.txt cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/cmd_tlm/tlm.txt
-$ cp adamant_example/src/assembly/linux/build/cosmos/plugin/linux_example_ccsds_cosmos_plugin.txt cosmos-project/openc3-cosmos-linux-example/plugin.txt
-$ cp adamant/gnd/cosmos/cmd_checksum.rb cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/lib/cmd_checksum.rb
+$ ./install_cosmos_plugin.sh cosmos-project
 ```
 
-The plugin can now be compiled. Navigate to the plugin directory at `openc3-cosmos-linux-example` and run:
+The plugin can now be compiled. Navigate to the plugin directory at `cosmos-project/openc3-cosmos-linux-example` and run:
 
 ```
 $ ./../openc3.sh cli rake build VERSION=1.0.0
