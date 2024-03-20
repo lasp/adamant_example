@@ -105,7 +105,7 @@ And must be placed in the COSMOS plugin directory at:
 cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/lib/cmd_checksum.rb
 ```
 
-A helper script, which takes the Adamant assembly name and COSMOS install directory as arguments, is provided to copy the plugin configuration files to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by navigating to `adamant_example/gnd/cosmos` on the host machine and running:
+A helper script, which takes the Adamant assembly name and COSMOS install directory as arguments, is provided to copy the plugin configuration files, and any custom protocols requested by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by navigating to `adamant_example/gnd/cosmos` on the host machine and running:
 
 ```
 $ ./install_cosmos_plugin.sh linux_example cosmos-project
