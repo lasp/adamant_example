@@ -18,7 +18,9 @@ FROM ghcr.io/lasp/adamant:latest as adamant_base
 #       but leaving this comment here for reference
 #
 FROM adamant_base AS install_elf2uf2
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -yq make cmake automake autoconf build-essential texinfo libtool libftdi-dev libusb-1.0-0-dev gcc-arm-none-eabi gcc g++ libstdc++-arm-none-eabi-newlib \
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -yq make cmake automake autoconf build-essential texinfo libtool libftdi-dev libusb-1.0-0-dev gcc-arm-none-eabi gcc g++ libstdc++-arm-none-eabi-newlib \
     && mkdir -p /root/pico \
     && cd /root/pico \
     && git clone -b master https://github.com/raspberrypi/pico-sdk.git \
@@ -38,6 +40,7 @@ ENV BIN_DIR=/usr/local/bin
 COPY --from=install_elf2uf2 /root/pico/pico-sdk/tools/elf2uf2/build/elf2uf2 $BIN_DIR
 
 # Set up .bashrc to automatically activate the Adamant Example environment
+ARG DOCKER_USER=user
 RUN cp /root/.bashrc $HOME/.bashrc \
     && echo "cd $HOME && [ -f "~/adamant_example/env/activate" ] && source adamant_example/env/activate" >> $HOME/.bashrc \
     && chown -R $DOCKER_USER:$DOCKER_USER $HOME
