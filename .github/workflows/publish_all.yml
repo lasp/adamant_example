@@ -17,12 +17,12 @@ jobs:
       - run: echo "Starting job triggered by a ${{ github.event_name }} event on a ${{ runner.os }} server hosted by GitHub."
       - run: echo "Checking out ${{ github.repository }} on branch ${{ github.ref }}."
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           set-safe-directory: true
           path: adamant_example
       - name: Clone adamant repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           set-safe-directory: true
           repository: lasp/adamant
