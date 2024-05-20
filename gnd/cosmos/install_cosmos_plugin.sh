@@ -8,6 +8,15 @@
 
 adamant_assembly_name=$1
 cosmos_install_name=$2
+if [[ $1 == "" ]]
+ then
+ echo "Adamant assembly location argument not provided, exiting."
+ exit 0
+elif [[ $2 == "" ]]
+ then
+ echo "COSMOS installation location argument not provided, exiting."
+ exit 0
+fi
 cosmos_install_dir=`realpath ../../../$cosmos_install_name`
 cosmos_plugin_dir=`realpath $cosmos_install_dir/openc3-cosmos-${adamant_assembly_name//_/-}`
 # Get build directory:
