@@ -10,12 +10,16 @@ adamant_assembly_name=$1
 cosmos_install_name=$2
 if [[ $1 == "" ]]
  then
- echo "Adamant assembly location argument not provided, exiting."
- exit 0
+ echo "Adamant assembly name argument not provided."
+ echo "Usage: \"./install_cosmos_plugin.sh Adamant_assembly_name path_to_COSMOS_directory\""
+ echo "Exiting."
+ exit 1
 elif [[ $2 == "" ]]
  then
- echo "COSMOS installation location argument not provided, exiting."
- exit 0
+ echo "COSMOS installation location argument not provided."
+ echo "Usage: \"./install_cosmos_plugin.sh Adamant_assembly_name path_to_COSMOS_directory\""
+ echo "Exiting."
+ exit 1
 fi
 cosmos_install_dir=`realpath ../../../$cosmos_install_name`
 cosmos_plugin_dir=`realpath $cosmos_install_dir/openc3-cosmos-${adamant_assembly_name//_/-}`
