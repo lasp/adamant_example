@@ -180,7 +180,7 @@ $ cd adamant_example/src/assembly/pico/main
 $ redo cosmos_config
 ```
 
-This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/pico/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct. By default, this template applies settings specific to the Linux example using TCP, and should be modified for the serial connection used by the Pico. The Adamant template includes a serial configuration in comments, and after review this should resemble:
+This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/pico/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct. By default, this template applies settings specific to the Linux example using TCP, and should be modified for the serial connection used by the Pico. The Adamant template includes a functional serial configuration in comments. Enable the serial configuration by commenting out the TCP configuration and uncommenting the serial configuration. This should resemble:
 
 ```
 # COSMOS interface documentation is available at: https://docs.openc3.com/docs/configuration/interfaces
@@ -203,7 +203,7 @@ Target Linux_Example <%= linux_example_target_name %>
 #   Protocol Read crc_protocol.rb <%= crc_parameter_name %> false "ERROR" -16 16
 #   Protocol Write cmd_checksum.rb <%= checksum_parameter_name %>
 # Serial example interface:
-Interface <%= linux_example_target_name %>_INT serial_interface.rb <%= port_w %> <%= port_r %> 10.0 nil Length 64 16 11 1 Big_Endian 0 FED4AFEE
+Interface <%= linux_example_target_name %>_INT serial_interface.rb <%= port_w %> <%= port_r %> 115200 NONE 1 10.0 nil Length 64 16 11 1 Big_Endian 0 FED4AFEE
   Map_Target <%= linux_example_target_name %>
   Protocol Read crc_sync_protocol.rb <%= crc_parameter_name %> false "ERROR" -16 16
   Protocol Write cmd_sync_checksum.rb <%= checksum_parameter_name %>
@@ -223,7 +223,7 @@ $ cd cosmos-project/openc3-cosmos-pico-example
 $ ../openc3.sh cli rake build VERSION=1.0.0
 ```
 
-Select `Click to select plugin .gem file to install` and navigate to the compiled plugin gem file at `cosmos-project/openc3-cosmos-pico-example/openc3-cosmos-pico-example-1.0.0.gem` to install our generated plugin. The plugin is templated to allow changing of parameters such as serial ports, but the default values are already set to correspond with this project.
+In the COSMOS Admin Console, select `Click to select plugin .gem file to install` and navigate to the compiled plugin gem file at `cosmos-project/openc3-cosmos-pico-example/openc3-cosmos-pico-example-1.0.0.gem` to install the compiled plugin. The plugin is templated to allow changing of parameters such as serial ports, but the default values are already set to correspond with this project.
 
 The plugin will be installed. With the Pico connected and running, the COSMOS Log Messages panel should show that the serial interface has accepted a new connection from Adamant.
 
