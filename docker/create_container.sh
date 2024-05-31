@@ -13,6 +13,7 @@ esac
 
 execute "docker run -d \
   --name $DOCKER_CONTAINER_NAME \
+  --network=\"host\" \
   --mount type=bind,source=\"$(pwd)\"/../../adamant,target=/home/user/adamant \
   --mount type=bind,source=\"$(pwd)\"/../../adamant_example,target=/home/user/adamant_example \
   $ON_LINUX \

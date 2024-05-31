@@ -235,6 +235,14 @@ With COSMOS running, here are some interesting things you can try:
  2. View telemetry from the Counter and Oscillator components by opening the `Telemetry Grapher` panel and selecting the "PICO_EXAMPLE" target, "HOUSEKEEPING_PACKET" packet, "OSCILLATOR_A.OSCILLATOR_VALUE.VALUE" as item, and selecting "Add Item".
  3. Send any command by selecting it in the `Command Sender` panel. Try sending a NOOP or changing the Oscillator frequencies by selecting "Oscillator_A-Set_Frequency", changing "Value", and selecting "Send".
  4. View the queue usage for each component by opening the `Packet Viewer` panel and selecting "HOUSEKEEPING_PACKET".
+ 5. View events on port 7779 from within the Adamant environment by building the Pico event definitions and running the socket decoder while the Pico is connected and the COSMOS plugin is running. To do this, run the following commands from within the Adamant environment:
+
+ ```
+ $ cd adamant_example/src/assembly/pico
+ $ redo build/py/pico_example_events.py
+ $ cd ~/adamant/gnd/bin
+ $ python socket_event_decoder.py localhost 7779 98 ../../../adamant_example/src/assembly/pico/build/py/pico_example_events.py decoder.log
+ ```
 
 ## Commanding and Telemetry with Hydra
 
