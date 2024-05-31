@@ -98,7 +98,7 @@ From here you can use GDB as you normally would to set break points, pause the p
 You can verify that telemetry is being produced by the Pico by opening the USB serial device on your PC with a program like minicom or screen with a baud rate of 115200, ie.
 
 ```
-$ screen /dev/tty.usbmodem22402 115200
+$ screen /dev/ttyACM0 115200
 ```
 
 ### Without the Debug Probe
@@ -115,14 +115,14 @@ The Pico can act like a USB storage device, allowing you to program it by simply
 You can verify that telemetry is being produced by the Pico by opening the USB serial device on your PC with a program like minicom or screen with a baud rate of 115200, ie.
 
 ```
-$ screen /dev/tty.usbserial-230 115200
+$ screen /dev/ttyACM0 115200
 ```
 
 ## Commanding and Telemetry with OpenC3 [COSMOS](https://github.com/OpenC3/cosmos)
 
  ![`Commanding and Telemetry with OpenC3 COSMOS`](img/cosmos.png "Commanding and Telemetry with OpenC3 COSMOS")
 
-To best interact with the Linux assembly, we need to use a ground system interface, such as OpenC3 COSMOS. To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
+To best interact with the Linux assembly, we need to use a ground system interface, such as OpenC3 [COSMOS](https://github.com/OpenC3/cosmos). To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
 
 ```
 $ git clone https://github.com/openc3/cosmos-project.git
@@ -135,7 +135,7 @@ The COSMOS Docker container must be configured to use the same serial ports as A
       - /dev/ttyACM0:/dev/tty0
 ```
 
-Note that the device name may vary between systems and should correspond to the device file for the Pico's USB port. To find the device file for your USB port, use the following command:
+Where `/dev/ttyACM0` should correspond to the device file for the Pico's USB port on your host machine. Note that the device name may vary between systems. To find the device file for your USB port, use the following command:
 
 ```
 $ ls /dev/tty*
@@ -256,7 +256,7 @@ Hydra will connect to the serial port on your host machine. You can tell Hydra t
 [hardware configuration file](hydra/Config/hardware.xml). Change the `port` field in the following line:
 
 ```
-<hwSerial name="serialPort" port="/dev/tty.usbmodem22402" baud="115200" parity="NONE" stopbits="1"/>
+<hwSerial name="serialPort" port="/dev/ttyACM0" baud="115200" parity="NONE" stopbits="1"/>
 ```
 
 to the USB serial port from the Pico on your PC. To find the device file for your USB port, use the following command:
