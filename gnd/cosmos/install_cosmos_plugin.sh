@@ -27,7 +27,6 @@ cosmos_plugin_dir=`realpath $cosmos_install_dir/openc3-cosmos-${adamant_assembly
 # Get build directory:
 adamant_assembly_name_short=(${adamant_assembly_name//_/ })
 adamant_example_plugin_dir=`realpath ../../src/assembly/${adamant_assembly_name_short[0]}/build/cosmos/plugin`
-adamant_example_template_dir=`realpath ../../src/assembly/${adamant_assembly_name_short[0]}/build/cosmos/template`
 adamant_protocol_dir=`realpath ../../../adamant/gnd/cosmos`
 # Copy all protocol files (plugins compile with only needed protocols):
 cp -a $adamant_protocol_dir/*.rb $cosmos_plugin_dir/targets/${adamant_assembly_name^^}/lib/
@@ -44,9 +43,9 @@ else
  echo "\"${adamant_assembly_name}_ccsds_cosmos_telemetry.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly."
  exit 1
 fi
-if [[ -f "$adamant_example_template_dir/${adamant_assembly_name}_ccsds_cosmos_plugin.txt" ]]; then
- cp $adamant_example_template_dir/${adamant_assembly_name}_ccsds_cosmos_plugin.txt $cosmos_plugin_dir/plugin.txt
+if [[ -f "$adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_plugin.txt" ]]; then
+ cp $adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_plugin.txt $cosmos_plugin_dir/plugin.txt
 else
- echo "\"${adamant_assembly_name}_ccsds_cosmos_plugin.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly."
+ echo "\"${adamant_assembly_name}_ccsds_cosmos_plugin.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly, review the template plugin file, and copy to the \"build/cosmos/plugin\" directory."
  exit 1
 fi

@@ -180,7 +180,7 @@ $ cd adamant_example/src/assembly/pico/main
 $ redo cosmos_config
 ```
 
-This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/pico/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct. By default, this template applies settings specific to the Linux example using TCP, and should be modified for the serial connection used by the Pico. The Adamant template includes a functional serial configuration in comments. Enable the serial configuration by commenting out the TCP configuration and uncommenting the serial configuration. This should resemble:
+This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/pico/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the plugin directory. By default, this template applies settings specific to the Linux example using TCP, and should be modified for the serial connection used by the Pico. The Adamant template includes a functional serial configuration in comments. Enable the serial configuration by commenting out the TCP configuration and uncommenting the serial configuration. This should resemble:
 
 ```
 # COSMOS interface documentation is available at: https://docs.openc3.com/docs/configuration/interfaces
@@ -209,7 +209,14 @@ Interface <%= linux_example_target_name %>_INT serial_interface.rb <%= port_w %>
   Protocol Write cmd_sync_checksum.rb <%= checksum_parameter_name %>
 ```
 
-A helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, is provided to copy the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
+The helper script looks for this file in the plugin directory, so copy it to that location by running:
+
+```
+$ cd adamant_example/src/assembly/linux
+$ cp build/cosmos/template/linux_example_ccsds_cosmos_plugin.txt build/cosmos/plugin
+```
+
+The helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, copies the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
 
 ```
 $ cd adamant_example/src/assembly/pico/main

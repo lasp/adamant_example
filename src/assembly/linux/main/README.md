@@ -88,9 +88,14 @@ $ cd adamant_example/src/assembly/linux/main
 $ redo cosmos_config
 ```
 
-This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/linux/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct. By default, this template applies settings specific to this example and should be modified for other configurations.
+This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/linux/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the plugin directory. By default, this template applies settings specific to this example and should be modified for other configurations. The helper script looks for this file in the plugin directory, so copy it to that location by running:
 
-A helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, is provided to copy the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
+```
+$ cd adamant_example/src/assembly/linux
+$ cp build/cosmos/template/linux_example_ccsds_cosmos_plugin.txt build/cosmos/plugin
+```
+
+The helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, copies the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
 
 ```
 $ cd adamant_example/src/assembly/linux/main
