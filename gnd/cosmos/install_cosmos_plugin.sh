@@ -26,19 +26,20 @@ adamant_assembly_name=${adamant_assembly_name##*/}
 cosmos_plugin_dir=`realpath $cosmos_install_dir/openc3-cosmos-${adamant_assembly_name//_/-}`
 # Get build directory:
 adamant_assembly_name_short=(${adamant_assembly_name//_/ })
+adamant_assembly_name_upper=$(tr [:lower:] [:upper:] <<< "$adamant_assembly_name")
 adamant_example_plugin_dir=`realpath ../../src/assembly/${adamant_assembly_name_short[0]}/build/cosmos/plugin`
 adamant_protocol_dir=`realpath ../../../adamant/gnd/cosmos`
 # Copy all protocol files (plugins compile with only needed protocols):
-cp -a $adamant_protocol_dir/*.rb $cosmos_plugin_dir/targets/${adamant_assembly_name^^}/lib/
+cp -a $adamant_protocol_dir/*.rb $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/lib/
 # Copy plugin configuration files with error checking:
 if [[ -f "$adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt" ]]; then
- cp $adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt $cosmos_plugin_dir/targets/${adamant_assembly_name^^}/cmd_tlm/cmd.txt
+ cp $adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/cmd.txt
 else
  echo "\"${adamant_assembly_name}_ccsds_cosmos_commands.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly."
  exit 1
 fi
 if [[ -f "$adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt" ]]; then
- cp $adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt $cosmos_plugin_dir/targets/${adamant_assembly_name^^}/cmd_tlm/tlm.txt
+ cp $adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/tlm.txt
 else
  echo "\"${adamant_assembly_name}_ccsds_cosmos_telemetry.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly."
  exit 1
