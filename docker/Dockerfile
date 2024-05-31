@@ -5,6 +5,7 @@
 # provided in this directory.
 #
 FROM ghcr.io/lasp/adamant:latest as adamant_base
+USER root
 
 # Install elf2uf2
 #
@@ -45,5 +46,5 @@ RUN cp /root/.bashrc $HOME/.bashrc \
     && echo "cd $HOME && [ -f "~/adamant_example/env/activate" ] && source adamant_example/env/activate" >> $HOME/.bashrc \
     && chown -R $DOCKER_USER:$DOCKER_USER $HOME
 
-# Make sure user is root at end.
-USER root
+# Make sure user is user at end.
+USER user
