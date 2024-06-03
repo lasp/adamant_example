@@ -180,41 +180,7 @@ $ cd adamant_example/src/assembly/pico/main
 $ redo cosmos_config
 ```
 
-This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/pico/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the plugin directory. By default, this template applies settings specific to the Linux example using TCP, and should be modified for the serial connection used by the Pico. The Adamant template includes a functional serial configuration in comments. Enable the serial configuration by commenting out the TCP configuration and uncommenting the serial configuration. This should resemble:
-
-```
-# COSMOS interface documentation is available at: https://docs.openc3.com/docs/configuration/interfaces
-# Set variables here to allow variation in your plugin.
-# Variables are able to be modified at time of install in COSMOS.
-Variable linux_example_target_name Pico_Example
-Variable crc_parameter_name CRC
-Variable checksum_parameter_name Checksum
-# If TCP:
-# Variable port_w 2003
-# Variable port_r 2003
-# If serial:
-Variable port_w /dev/tty0
-Variable port_r /dev/tty0
-
-Target Linux_Example <%= linux_example_target_name %>
-# TCP example interface:
-# Interface <%= linux_example_target_name %>_INT tcpip_server_interface.rb <%= port_w %> <%= port_r %> 10.0 nil Length 32 16 7
-#   Map_Target <%= linux_example_target_name %>
-#   Protocol Read crc_protocol.rb <%= crc_parameter_name %> false "ERROR" -16 16
-#   Protocol Write cmd_checksum.rb <%= checksum_parameter_name %>
-# Serial example interface:
-Interface <%= linux_example_target_name %>_INT serial_interface.rb <%= port_w %> <%= port_r %> 115200 NONE 1 10.0 nil Length 64 16 11 1 Big_Endian 0 FED4AFEE
-  Map_Target <%= linux_example_target_name %>
-  Protocol Read crc_sync_protocol.rb <%= crc_parameter_name %> false "ERROR" -16 16
-  Protocol Write cmd_sync_checksum.rb <%= checksum_parameter_name %>
-```
-
-The helper script looks for this file in the plugin directory, so copy it to that location by running:
-
-```
-$ cd adamant_example/src/assembly/linux
-$ cp build/cosmos/template/linux_example_ccsds_cosmos_plugin.txt build/cosmos/plugin
-```
+This generates the command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration file is located in the `adamant_example/src/assembly/pico/cosmos/plugin/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the COSMOS plugin directory. By default, this template applies settings specific to this example and should be modified for other configurations.
 
 The helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, copies the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
 

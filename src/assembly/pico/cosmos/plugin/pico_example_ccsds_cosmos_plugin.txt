@@ -1,0 +1,16 @@
+# COSMOS interface documentation is available at: https://docs.openc3.com/docs/configuration/interfaces
+# Set variables here to allow variation in your plugin.
+# Variables are able to be modified at time of install in COSMOS.
+Variable pico_example_target_name Pico_Example
+Variable crc_parameter_name CRC
+Variable checksum_parameter_name Checksum
+Variable port_w /dev/tty0
+Variable port_r /dev/tty0
+
+Target Pico_Example <%= pico_example_target_name %>
+# Serial example interface:
+Interface <%= pico_example_target_name %>_INT serial_interface.rb <%= port_w %> <%= port_r %> 10.0 nil Length 64 16 11 1 Big_Endian 0 FED4AFEE
+  Map_Target <%= pico_example_target_name %>
+  Protocol Read crc_sync_protocol.rb <%= crc_parameter_name %> false "ERROR" -16 16
+  Protocol Write cmd_sync_checksum.rb <%= checksum_parameter_name %>
+

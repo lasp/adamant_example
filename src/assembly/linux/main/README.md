@@ -88,12 +88,7 @@ $ cd adamant_example/src/assembly/linux/main
 $ redo cosmos_config
 ```
 
-This generates the plugin configuration file and its respective command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory. The plugin configuration template file is located in the `adamant_example/src/assembly/linux/build/cosmos/template/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the plugin directory. By default, this template applies settings specific to this example and should be modified for other configurations. The helper script looks for this file in the plugin directory, so copy it to that location by running:
-
-```
-$ cd adamant_example/src/assembly/linux
-$ cp build/cosmos/template/linux_example_ccsds_cosmos_plugin.txt build/cosmos/plugin
-```
+This generates the command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory. The plugin configuration file is located in the `adamant_example/src/assembly/linux/cosmos/plugin/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the COSMOS plugin directory. By default, this configuration applies settings specific to this example and should be modified for other configurations.
 
 The helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, copies the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
 
@@ -109,7 +104,7 @@ $ cd cosmos-project/openc3-cosmos-linux-example
 $ ../openc3.sh cli rake build VERSION=1.0.0
 ```
 
-Select `Click to select plugin .gem file to install` and navigate to the compiled plugin gem file at `cosmos-project/openc3-cosmos-linux-example/openc3-cosmos-linux-example-1.0.0.gem` to install our generated plugin. The plugin is templated to allow changing of parameters such as ports, but the default values are already set to correspond with this project.
+In the COSMOS Admin Console, select `Click to select plugin .gem file to install` and navigate to the compiled plugin gem file at `cosmos-project/openc3-cosmos-linux-example/openc3-cosmos-linux-example-1.0.0.gem` to install our generated plugin. The plugin is templated to allow changing of parameters such as ports, but the default values are already set to correspond with this project.
 
 The plugin will be installed. Return to the Adamant virtual environment and start the Linux assembly by running:
 
