@@ -1,0 +1,16 @@
+name: adamant_example
+services:
+    adamant_example:
+        container_name: ${DOCKER_CONTAINER_NAME}
+        volumes:
+            - type: bind
+              source: ../../adamant
+              target: /home/user/adamant
+            - type: bind
+              source: ../../adamant_example
+              target: /home/user/adamant_example
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        network_mode: host
+        image: ${DOCKER_IMAGE_NAME}
+        command: sleep infinity
