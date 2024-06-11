@@ -32,11 +32,11 @@ Starting Linux demo... Use Ctrl+C to exit.
 0000168827.862054941 - Counter_Instance.Sending_Value (0x00000091) : (Value = 3)
 ...
 ```
-## Commanding and Telemetry with OpenC3 [COSMOS](https://github.com/OpenC3/cosmos)
+## Commanding and Telemetry with [COSMOS](https://github.com/OpenC3/cosmos)
 
  ![`Commanding and Telemetry with OpenC3 COSMOS`](img/cosmos.png "Commanding and Telemetry with OpenC3 COSMOS")
- 
-To best interact with the Linux assembly, we need to use a ground system interface, such as OpenC3 COSMOS. To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
+
+To best interact with the Linux assembly, we need to use a ground system interface, such as OpenC3 [COSMOS](https://github.com/OpenC3/cosmos). To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
 
 ```
 $ git clone https://github.com/openc3/cosmos-project.git
@@ -81,26 +81,26 @@ cosmos-project/openc3-cosmos-linux-example/targets/LINUX_EXAMPLE/cmd_tlm/tlm.txt
 
 After installing and running COSMOS we need to build the Linux Example plugin configuration files. This will allow COSMOS to decode telemetry from the Adamant virtual environment and properly format outgoing commands.
 
-These files are autocoded by Adamant. From the Adamant virtual environment run:
+These files are autocoded by Adamant. *From the Adamant virtual environment* run:
 
 ```
 $ cd adamant_example/src/assembly/linux/main
 $ redo cosmos_config
 ```
 
-This generates the command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory. The plugin configuration file is located in the `adamant_example/src/assembly/linux/cosmos/plugin/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the COSMOS plugin directory. By default, this configuration applies settings specific to this example and should be modified for other configurations.
+This generates the command and telemetry configurations in the `adamant_example/src/assembly/linux/build/cosmos/plugin/` directory. Note that the main plugin configuration file is located in `adamant_example/src/assembly/linux/main/cosmos/plugin/`. This file should be reviewed to ensure the interface and required protocols are correct for your configuration. All of these files will be installed into the COSMOS plugin in the following steps.
 
-The helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, copies the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
+Next, run the helper script to install the Adamant plugin configuration files to the COSMOS plugin directory. *The following should be run from the host machine*. If the COSMOS and Adamant example project directories are adjacent, the command to install the configuration would be:
 
 ```
 $ cd adamant_example/src/assembly/linux/main
-$ ./install_cosmos_plugin.sh cosmos-project
+$ ./install_cosmos_plugin.sh ../../../../../cosmos-project/openc3-cosmos-linux-example/
 ```
 
 The plugin can now be compiled. Next, run:
 
 ```
-$ cd cosmos-project/openc3-cosmos-linux-example
+$ cd ../../../../../cosmos-project/openc3-cosmos-linux-example/
 $ ../openc3.sh cli rake build VERSION=1.0.0
 ```
 

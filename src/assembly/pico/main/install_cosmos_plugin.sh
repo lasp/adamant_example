@@ -1,12 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
-#
-# This is a convenience script that calls a script of the same name in gnd/cosmos with the correct first argument for this assembly
-# The second argument should be the relative path from the top directory of the example assembly to the COSMOS directory.
-# Ex. `./install_cosmos_plugin.sh cosmos-project` if COSMOS is adjacent to adamant_example
+if [[ $1 == "" ]]
+ then
+ echo "COSMOS plugin directory path not provided."
+ echo "Usage: \"./install_cosmos_plugin.sh ../../../../../cosmos-project/openc3-cosmos-pico-example/\""
+ echo "Exiting."
+ exit 1
+fi
 
 cosmos_dir=$1
-assembly_yaml='pico_example.assembly.yaml'
-cd ../../../../gnd/cosmos
-./install_cosmos_plugin.sh ../../src/assembly/pico/$assembly_yaml ../../../$cosmos_dir
-cd - >/dev/null
+this_dir=`readlink -f "${BASH_SOURCE[0]}" | xargs dirname`
+assembly_yaml=`ls -1 $this_dir/../*.assembly.yaml`
+$this_dir/../../../../gnd/cosmos/install_cosmos_plugin.sh $assembly_yaml $cosmos_dir

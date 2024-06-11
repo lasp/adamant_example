@@ -1,53 +1,57 @@
-#!/bin/sh
+#!/bin/bash
 
 #
-# Copy COSMOS plugin configuration to argument directory
-# This will likely be moved to the Adamant repository
-# COSMOS install directory argument should be relative to the Linux example path
+# Copy COSMOS plugin configuration from Adamant into COSMOS plugin directory
 # Ex. `./install_cosmos_plugin.sh ../../src/assembly/linux/linux_example.assembly.yaml ../../../cosmos-project` if COSMOS is adjacent to adamant_example
 
-adamant_assembly_dir=$1 # relative path to assembly yaml file
-cosmos_install_dir=$2 # relative path to COSMOS installation
+adamant_assembly_model=$1 # path to assembly yaml file
+cosmos_plugin_dir=$2 # path to COSMOS plugin within the COSMOS installation
+
 if [[ $1 == "" ]]
- then
- echo "Adamant assembly name argument not provided."
- echo "Usage: \"./install_cosmos_plugin.sh ../../src/assembly/linux/linux_example.assembly.yaml ../../../cosmos-project\""
- echo "Exiting."
- exit 1
+then
+  echo "Adamant assembly model argument not provided."
+  echo "Usage: \"./install_cosmos_plugin.sh ../../src/assembly/linux/linux_example.assembly.yaml ../../../cosmos-project/openc3-cosmos-plugin-dir\""
+  echo "Exiting."
+  exit 1
 elif [[ $2 == "" ]]
- then
- echo "COSMOS installation location argument not provided."
- echo "Usage: \"./install_cosmos_plugin.sh ../../src/assembly/linux/linux_example.assembly.yaml ../../../cosmos-project\""
- echo "Exiting."
- exit 1
+  then
+  echo "COSMOS plugin directory argument not provided."
+  echo "Usage: \"./install_cosmos_plugin.sh ../../src/assembly/linux/linux_example.assembly.yaml ../../../cosmos-project/openc3-cosmos-plugin-dir\""
+  echo "Exiting."
+  exit 1
 fi
-adamant_assembly_name=${adamant_assembly_dir%.assembly.yaml}
+
+this_dir=`readlink -f "${BASH_SOURCE[0]}" | xargs dirname`
+adamant_assembly_name=${adamant_assembly_model%.assembly.yaml}
 adamant_assembly_name=${adamant_assembly_name##*/}
-cosmos_plugin_dir=`realpath $cosmos_install_dir/openc3-cosmos-${adamant_assembly_name//_/-}`
+adamant_assembly_dir=`dirname $adamant_assembly_model`
+cosmos_plugin_dir=`realpath $cosmos_plugin_dir`
+
 # Get build directory:
 adamant_assembly_name_short=(${adamant_assembly_name//_/ })
 adamant_assembly_name_upper=$(tr [:lower:] [:upper:] <<< "$adamant_assembly_name")
-adamant_example_cmdtlm_dir=`realpath ../../src/assembly/${adamant_assembly_name_short[0]}/build/cosmos/plugin`
-adamant_example_plugin_dir=`realpath ../../src/assembly/${adamant_assembly_name_short[0]}/cosmos/plugin`
-adamant_protocol_dir=`realpath ../../../adamant/gnd/cosmos`
+adamant_assembly_cmdtlm_dir=`realpath $adamant_assembly_dir/build/cosmos/plugin`
+adamant_assembly_plugin_dir=`realpath $adamant_assembly_dir/main/cosmos/plugin`
+adamant_protocol_dir=`realpath $this_dir/../../../adamant/gnd/cosmos`
+
 # Copy all protocol files (plugins compile with only needed protocols):
-cp -a $adamant_protocol_dir/*.rb $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/lib/
+echo "Copying over plugin files..."
+cp -vfa $adamant_protocol_dir/*.rb $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/lib/
+
+do_copy() {
+  src=$1
+  dest=$2
+  if [[ -f "$src" ]]; then
+      cp -vf "$src" "$dest"
+  else
+      echo "\"$src\" does not exist, run \"redo cosmos_config\" from the Adamant assembly, or make sure the required source is present."
+      exit 1
+  fi
+}
+
 # Copy plugin configuration files with error checking:
-if [[ -f "$adamant_example_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt" ]]; then
- cp $adamant_example_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/cmd.txt
-else
- echo "\"${adamant_assembly_name}_ccsds_cosmos_commands.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly."
- exit 1
-fi
-if [[ -f "$adamant_example_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt" ]]; then
- cp $adamant_example_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/tlm.txt
-else
- echo "\"${adamant_assembly_name}_ccsds_cosmos_telemetry.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly."
- exit 1
-fi
-if [[ -f "$adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_plugin.txt" ]]; then
- cp $adamant_example_plugin_dir/${adamant_assembly_name}_ccsds_cosmos_plugin.txt $cosmos_plugin_dir/plugin.txt
-else
- echo "\"${adamant_assembly_name}_ccsds_cosmos_plugin.txt\" does not exist, run \"redo cosmos_config\" from the Adamant assembly, review the template plugin file, and copy to the \"build/cosmos/plugin\" directory."
- exit 1
-fi
+do_copy "$adamant_assembly_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt" $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/cmd.txt
+do_copy "$adamant_assembly_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt" $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/tlm.txt
+do_copy "$adamant_assembly_plugin_dir/plugin.txt" $cosmos_plugin_dir/plugin.txt
+echo "Success."
+echo "Plugin files copied to $cosmos_plugin_dir."

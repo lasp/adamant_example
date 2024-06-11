@@ -7,7 +7,7 @@ Variable checksum_parameter_name Checksum
 Variable port_w 2003
 Variable port_r 2003
 
-Target Pico_Example <%= linux_example_target_name %>
+Target Linux_Example <%= linux_example_target_name %>
 # TCP example interface:
 Interface <%= linux_example_target_name %>_INT tcpip_server_interface.rb <%= port_w %> <%= port_r %> 10.0 nil Length 32 16 7
   Map_Target <%= linux_example_target_name %>

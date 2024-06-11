@@ -118,17 +118,21 @@ You can verify that telemetry is being produced by the Pico by opening the USB s
 $ screen /dev/ttyACM0 115200
 ```
 
-## Commanding and Telemetry with OpenC3 [COSMOS](https://github.com/OpenC3/cosmos)
+## Commanding and Telemetry with [COSMOS](https://github.com/OpenC3/cosmos)
 
  ![`Commanding and Telemetry with OpenC3 COSMOS`](img/cosmos.png "Commanding and Telemetry with OpenC3 COSMOS")
 
-To best interact with the Linux assembly, we need to use a ground system interface, such as OpenC3 [COSMOS](https://github.com/OpenC3/cosmos). To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
+To best interact with the Pico assembly, we need to use a ground system interface, such as OpenC3 [COSMOS](https://github.com/OpenC3/cosmos). To install COSMOS, navigate to an appropriate directory on your host machine and clone the COSMOS example project repository:
 
 ```
 $ git clone https://github.com/openc3/cosmos-project.git
 ```
 
-The COSMOS Docker container must be configured to use the same serial ports as Adamant. Edit this configuration at `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
+The COSMOS Docker container must be configured to use the serial port connected to the Pico.
+
+> **Note for Mac Hosts:** Exposing a serial device from a Mac host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the Mac and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac-specific modifications to this tutorial will be noted by "**For Mac**" after applicable steps.
+
+Edit `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
 
 ```
     devices:
@@ -140,6 +144,12 @@ Where `/dev/ttyACM0` should correspond to the device file for the Pico's USB por
 ```
 $ ls /dev/tty*
 ```
+
+> **For Mac**, do not add any `devices:`, instead modify `cosmos-project/compose.yaml` to expose TCP port that we will forward the serial traffic over by adding the following entry to the `openc3-operator:` section:
+> ```
+>     ports:
+>       - "2003:2003/tcp"
+> ```
 
 Start COSMOS by running:
 
@@ -171,34 +181,53 @@ cosmos-project/openc3-cosmos-pico-example/targets/PICO_EXAMPLE/cmd_tlm/cmd.txt
 cosmos-project/openc3-cosmos-pico-example/targets/PICO_EXAMPLE/cmd_tlm/tlm.txt
 ```
 
-After installing and running COSMOS we need to build the Pico Example plugin configuration files. This will allow COSMOS to decode telemetry from the Adamant virtual environment and properly format outgoing commands.
+After installing and running COSMOS we need to build the Pico Example plugin configuration files. This will allow COSMOS to decode telemetry from Adamant running on the Pico and properly format outgoing commands.
 
-These files are autocoded by Adamant. From the Adamant virtual environment run:
+These files are autocoded by Adamant. *From the Adamant virtual environment* run:
 
 ```
 $ cd adamant_example/src/assembly/pico/main
 $ redo cosmos_config
 ```
 
-This generates the command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. The plugin configuration file is located in the `adamant_example/src/assembly/pico/cosmos/plugin/` directory, and should be reviewed to ensure the interface and required protocols are correct, before copying to the COSMOS plugin directory. By default, this template applies settings specific to this example and should be modified for other configurations.
+This generates the command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. Note that the main plugin configuration file is located in `adamant_example/src/assembly/pico/main/cosmos/plugin/`. This file should be reviewed to ensure the interface and required protocols are correct for your configuration. All of these files will be installed into the COSMOS plugin in the following steps.
 
-The helper script, which takes the relative path from the top level of the assembly to the COSMOS install directory as an argument, copies the plugin configuration files, and any custom protocols used by the configuration, to the correct directories. If the COSMOS and Adamant example project directories are adjacent, complete the configuration by running:
+> **For Mac**, first overwrite the provided `plugin.txt` file with one that is designed for TCP communication.
+> ```
+> $ cd adamant_example/src/assembly/pico/main/cosmos/plugin
+> $ cp plugin.txt.for_mac plugin.txt
+> ```
+
+Next, run the helper script to install the Adamant plugin configuration files to the COSMOS plugin directory. *The following should be run from the host machine*. If the COSMOS and Adamant example project directories are adjacent, the command to install the configuration would be:
 
 ```
 $ cd adamant_example/src/assembly/pico/main
-$ ./install_cosmos_plugin.sh cosmos-project
+$ ./install_cosmos_plugin.sh ../../../../../cosmos-project/openc3-cosmos-pico-example/
 ```
 
 The plugin can now be compiled. Next, run:
 
 ```
-$ cd cosmos-project/openc3-cosmos-pico-example
+$ cd ../../../../../cosmos-project/openc3-cosmos-pico-example/
 $ ../openc3.sh cli rake build VERSION=1.0.0
 ```
 
 In the COSMOS Admin Console, select `Click to select plugin .gem file to install` and navigate to the compiled plugin gem file at `cosmos-project/openc3-cosmos-pico-example/openc3-cosmos-pico-example-1.0.0.gem` to install the compiled plugin. The plugin is templated to allow changing of parameters such as serial ports, but the default values are already set to correspond with this project.
 
 The plugin will be installed. With the Pico connected and running, the COSMOS Log Messages panel should show that the serial interface has accepted a new connection from Adamant.
+
+> **For Mac**, before COSMOS can connect to the Pico serial stream, we must first forward all the serial data over TCP using the `serial_tcp_bridge.py`. This program depends on pyserial, which we will install first. *From the Mac host run:*
+> ```
+> $ cd adamant_example/gnd/cosmos
+> $ python3 -m venv venv
+> $ source venv/bin/activate
+> $ pip install pyserial
+> ```
+> Now run `serial_tcp_bridge.py` with the following arguments:
+> ```
+> $ python3 serial_tcp_bridge.py --tty /dev/tty.usbmodem22402 --baudrate 115200 --ip 127.0.0.1 --port 2003
+> ```
+> Make sure to provide the correct device path for your serial device to the `--tty` argument. You should see telemetry packets being received by the bridge program and also by COSMOS.
 
 With COSMOS running, here are some interesting things you can try:
 
