@@ -13,3 +13,25 @@ packets:
       - name: Adc_Data_Collector_Instance.Vsys
       - name: Adc_Data_Collector_Instance.Temperature
     period: "1" # create every tick
+  - name: Software_Status_Packet
+    description: This packet contains software status information.
+    id: 2
+    data_products:
+      - name: Ccsds_Command_Depacketizer_Instance.Accepted_Packet_Count
+      - name: Ccsds_Command_Depacketizer_Instance.Rejected_Packet_Count
+      - name: Command_Router_Instance.Command_Receive_Count
+      - name: Command_Router_Instance.Command_Success_Count
+      - name: Command_Router_Instance.Command_Failure_Count
+      - name: Command_Router_Instance.Last_Received_Command
+      - name: Command_Router_Instance.Last_Successful_Command
+      - name: Command_Router_Instance.Last_Failed_Command
+      - name: Command_Router_Instance.Noop_Arg_Last_Value
+      - name: Fault_Correction_Instance.Fault_Counter
+      - name: Fault_Correction_Instance.Last_Fault_Id_Received
+      - name: Fault_Correction_Instance.Time_Of_Last_Fault_Received
+      - name: Product_Packetizer_Instance.Housekeeping_Packet_Period
+      - name: Product_Packetizer_Instance.Software_Status_Packet_Period
+      - name: Cpu_Monitor_Instance.Packet_Period
+      - name: Queue_Monitor_Instance.Packet_Period
+      - name: Stack_Monitor_Instance.Packet_Period
+    period: "1" # create every tick
