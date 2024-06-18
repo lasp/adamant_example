@@ -130,13 +130,15 @@ $ git clone https://github.com/openc3/cosmos-project.git
 
 The COSMOS Docker container must be configured to use the serial port connected to the Pico.
 
-> **Note for Mac/Windows Hosts:** Exposing a serial device from a Mac or Windows host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the host and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac-specific modifications to this tutorial will be noted by "**For Mac/Windows**" after applicable steps.
+> **Note for Mac/Windows Hosts:** Exposing a serial device from a Mac or Windows host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the host and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac and Windows specific modifications to this tutorial will be noted by "**For Mac/Windows**" after applicable steps.
 
 Edit `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
 
 ```
+    ports:
+      - "127.0.0.1:7779:7779" # Event packets
     devices:
-      - /dev/ttyACM0:/dev/tty0
+      - /dev/ttyACM0:/dev/tty0  # CMD/TLM packets
 ```
 
 Where `/dev/ttyACM0` should correspond to the device file for the Pico's USB port on your host machine. Note that the device name may vary between systems. To find the device file for your USB port, use the following command:
@@ -148,7 +150,8 @@ $ ls /dev/tty*
 > **For Mac/Windows**, do not add any `devices:`, instead modify `cosmos-project/compose.yaml` to expose TCP port that we will forward the serial traffic over by adding the following entry to the `openc3-operator:` section:
 > ```
 >     ports:
->       - "2003:2003/tcp"
+>       - "2003:2003/tcp" # CMD/TLM packets
+>       - "127.0.0.1:7779:7779" # Event packets
 > ```
 
 Start COSMOS by running:
@@ -238,8 +241,6 @@ With COSMOS running, here are some interesting things you can try:
  5. Note that FSW events from Adamant are not yet viewable within COSMOS itself. However, COSMOS forwards packets on port 7779. From within the Adamant environment we can view these events by building the Pico event definitions and running the socket decoder while the Pico is connected and the COSMOS plugin is running. To do this, run the following commands from within the Adamant environment:
 
  ```
- $ cd adamant_example/src/assembly/pico
- $ redo build/py/pico_example_events.py
  $ cd ~/adamant/gnd/bin
  $ python socket_event_decoder.py localhost 7779 98 ../../../adamant_example/src/assembly/pico/build/py/pico_example_events.py decoder.log
  ```
