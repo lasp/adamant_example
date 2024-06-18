@@ -130,7 +130,7 @@ $ git clone https://github.com/openc3/cosmos-project.git
 
 The COSMOS Docker container must be configured to use the serial port connected to the Pico.
 
-> **Note for Mac Hosts:** Exposing a serial device from a Mac host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the Mac and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac-specific modifications to this tutorial will be noted by "**For Mac**" after applicable steps.
+> **Note for Mac/Windows Hosts:** Exposing a serial device from a Mac or Windows host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the host and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac-specific modifications to this tutorial will be noted by "**For Mac/Windows**" after applicable steps.
 
 Edit `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
 
@@ -145,7 +145,7 @@ Where `/dev/ttyACM0` should correspond to the device file for the Pico's USB por
 $ ls /dev/tty*
 ```
 
-> **For Mac**, do not add any `devices:`, instead modify `cosmos-project/compose.yaml` to expose TCP port that we will forward the serial traffic over by adding the following entry to the `openc3-operator:` section:
+> **For Mac/Windows**, do not add any `devices:`, instead modify `cosmos-project/compose.yaml` to expose TCP port that we will forward the serial traffic over by adding the following entry to the `openc3-operator:` section:
 > ```
 >     ports:
 >       - "2003:2003/tcp"
@@ -192,7 +192,7 @@ $ redo cosmos_config
 
 This generates the command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. Note that the main plugin configuration file is located in `adamant_example/src/assembly/pico/main/cosmos/plugin/`. This file should be reviewed to ensure the interface and required protocols are correct for your configuration. All of these files will be installed into the COSMOS plugin in the following steps.
 
-> **For Mac**, first overwrite the provided `plugin.txt` file with one that is designed for TCP communication.
+> **For Mac/Windows**, first overwrite the provided `plugin.txt` file with one that is designed for TCP communication.
 > ```
 > $ cd adamant_example/src/assembly/pico/main/cosmos/plugin
 > $ cp plugin.txt.for_mac plugin.txt
@@ -216,7 +216,7 @@ In the COSMOS Admin Console, select `Click to select plugin .gem file to install
 
 The plugin will be installed. With the Pico connected and running, the COSMOS Log Messages panel should show that the serial interface has accepted a new connection from Adamant.
 
-> **For Mac**, before COSMOS can connect to the Pico serial stream, we must first forward all the serial data over TCP using the `serial_tcp_bridge.py`. This program depends on pyserial, which we will install first. *From the Mac host run:*
+> **For Mac/Windows**, before COSMOS can connect to the Pico serial stream, we must first forward all the serial data over TCP using the `serial_tcp_bridge.py`. This program depends on pyserial, which we will install first. *From the host run:*
 > ```
 > $ cd adamant_example/gnd/cosmos
 > $ python3 -m venv venv
@@ -227,7 +227,7 @@ The plugin will be installed. With the Pico connected and running, the COSMOS Lo
 > ```
 > $ python3 serial_tcp_bridge.py --tty /dev/tty.usbmodem22402 --baudrate 115200 --ip 127.0.0.1 --port 2003
 > ```
-> Make sure to provide the correct device path for your serial device to the `--tty` argument. You should see telemetry packets being received by the bridge program and also by COSMOS.
+> Make sure to provide the correct device path for your serial device to the `--tty` argument. On Windows hosts this will be a `COM` port. You should see telemetry packets being received by the bridge program and also by COSMOS.
 
 With COSMOS running, here are some interesting things you can try:
 
