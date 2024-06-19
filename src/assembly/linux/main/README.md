@@ -46,7 +46,8 @@ The COSMOS Docker container must be configured to use the same ports as Adamant.
 
 ```
     ports:
-      - "2003:2003/tcp"
+      - "2003:2003/tcp" # CMD/TLM packets
+      - "127.0.0.1:7779:7779" # Event packets
 ```
 
 Start COSMOS by running:

@@ -130,13 +130,15 @@ $ git clone https://github.com/openc3/cosmos-project.git
 
 The COSMOS Docker container must be configured to use the serial port connected to the Pico.
 
-> **Note for Mac Hosts:** Exposing a serial device from a Mac host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the Mac and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac-specific modifications to this tutorial will be noted by "**For Mac**" after applicable steps.
+> **Note for Mac/Windows Hosts:** Exposing a serial device from a Mac or Windows host to a Docker container is [not yet supported](https://github.com/docker/for-mac/issues/900). This can be worked around by connecting to the serial port on the host and forwarding traffic through a TCP socket to COSMOS running on the Docker container. Mac and Windows specific modifications to this tutorial will be noted by "**For Mac/Windows**" after applicable steps.
 
 Edit `cosmos-project/compose.yaml` and add the following entry to the `openc3-operator:` section:
 
 ```
+    ports:
+      - "127.0.0.1:7779:7779" # Event packets
     devices:
-      - /dev/ttyACM0:/dev/tty0
+      - /dev/ttyACM0:/dev/tty0  # CMD/TLM packets
 ```
 
 Where `/dev/ttyACM0` should correspond to the device file for the Pico's USB port on your host machine. Note that the device name may vary between systems. To find the device file for your USB port, use the following command:
@@ -145,10 +147,11 @@ Where `/dev/ttyACM0` should correspond to the device file for the Pico's USB por
 $ ls /dev/tty*
 ```
 
-> **For Mac**, do not add any `devices:`, instead modify `cosmos-project/compose.yaml` to expose TCP port that we will forward the serial traffic over by adding the following entry to the `openc3-operator:` section:
+> **For Mac/Windows**, do not add any `devices:`, instead modify `cosmos-project/compose.yaml` to expose TCP port that we will forward the serial traffic over by adding the following entry to the `openc3-operator:` section:
 > ```
 >     ports:
->       - "2003:2003/tcp"
+>       - "2003:2003/tcp" # CMD/TLM packets
+>       - "127.0.0.1:7779:7779" # Event packets
 > ```
 
 Start COSMOS by running:
@@ -192,7 +195,7 @@ $ redo cosmos_config
 
 This generates the command and telemetry configurations in the `adamant_example/src/assembly/pico/build/cosmos/plugin/` directory. Note that the main plugin configuration file is located in `adamant_example/src/assembly/pico/main/cosmos/plugin/`. This file should be reviewed to ensure the interface and required protocols are correct for your configuration. All of these files will be installed into the COSMOS plugin in the following steps.
 
-> **For Mac**, first overwrite the provided `plugin.txt` file with one that is designed for TCP communication.
+> **For Mac/Windows**, first overwrite the provided `plugin.txt` file with one that is designed for TCP communication.
 > ```
 > $ cd adamant_example/src/assembly/pico/main/cosmos/plugin
 > $ cp plugin.txt.for_mac plugin.txt
@@ -216,7 +219,7 @@ In the COSMOS Admin Console, select `Click to select plugin .gem file to install
 
 The plugin will be installed. With the Pico connected and running, the COSMOS Log Messages panel should show that the serial interface has accepted a new connection from Adamant.
 
-> **For Mac**, before COSMOS can connect to the Pico serial stream, we must first forward all the serial data over TCP using the `serial_tcp_bridge.py`. This program depends on pyserial, which we will install first. *From the Mac host run:*
+> **For Mac/Windows**, before COSMOS can connect to the Pico serial stream, we must first forward all the serial data over TCP using the `serial_tcp_bridge.py`. This program depends on pyserial, which we will install first. *From the host run:*
 > ```
 > $ cd adamant_example/gnd/cosmos
 > $ python3 -m venv venv
@@ -227,7 +230,7 @@ The plugin will be installed. With the Pico connected and running, the COSMOS Lo
 > ```
 > $ python3 serial_tcp_bridge.py --tty /dev/tty.usbmodem22402 --baudrate 115200 --ip 127.0.0.1 --port 2003
 > ```
-> Make sure to provide the correct device path for your serial device to the `--tty` argument. You should see telemetry packets being received by the bridge program and also by COSMOS.
+> Make sure to provide the correct device path for your serial device to the `--tty` argument. On Windows hosts this will be a `COM` port. You should see telemetry packets being received by the bridge program and also by COSMOS.
 
 With COSMOS running, here are some interesting things you can try:
 
@@ -235,6 +238,14 @@ With COSMOS running, here are some interesting things you can try:
  2. View telemetry from the Counter and Oscillator components by opening the `Telemetry Grapher` panel and selecting the "PICO_EXAMPLE" target, "HOUSEKEEPING_PACKET" packet, "OSCILLATOR_A.OSCILLATOR_VALUE.VALUE" as item, and selecting "Add Item".
  3. Send any command by selecting it in the `Command Sender` panel. Try sending a NOOP or changing the Oscillator frequencies by selecting "Oscillator_A-Set_Frequency", changing "Value", and selecting "Send".
  4. View the queue usage for each component by opening the `Packet Viewer` panel and selecting "HOUSEKEEPING_PACKET".
+ 5. Note that FSW events from Adamant are not yet viewable within COSMOS itself. However, COSMOS forwards packets on port 7779. From within the Adamant environment we can view these events by building the Pico event definitions and running the socket decoder while the Pico is connected and the COSMOS plugin is running. To do this, run the following commands from within the Adamant environment:
+
+ ```
+ $ cd ~/adamant/gnd/bin
+ $ python socket_event_decoder.py localhost 7779 98 ../../../adamant_example/src/assembly/pico/build/py/pico_example_events.py decoder.log
+ ```
+
+This can take a while to build, but you should see event text output once it is finished.
 
 ## Commanding and Telemetry with Hydra
 

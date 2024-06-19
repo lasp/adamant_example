@@ -13,3 +13,7 @@ Interface <%= linux_example_target_name %>_INT tcpip_server_interface.rb <%= por
   Map_Target <%= linux_example_target_name %>
   Protocol Read crc_protocol.rb <%= crc_parameter_name %> false "ERROR" -16 16
   Protocol Write cmd_checksum.rb <%= checksum_parameter_name %>
+
+# Router for fowarding packets over TCP to external programs:
+Router <%= linux_example_target_name %>_Router tcpip_server_interface.rb 7779 7779 10.0 nil Length 32 16 7
+  Map_Target <%= linux_example_target_name %>
