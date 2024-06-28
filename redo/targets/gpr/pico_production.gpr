@@ -1,5 +1,4 @@
 with "pico_bsp.gpr";
-with "ravenscar_build.gpr";
 
 project pico_production extends all "a_bareboard_production.gpr" is
 
@@ -15,7 +14,7 @@ project pico_production extends all "a_bareboard_production.gpr" is
 
    -- Specify cross compiler ARM target and Ravenscar runtime:
    for Target use "arm-eabi";
-   for Runtime ("Ada") use Ravenscar_Build'Runtime ("Ada");
+   for Runtime ("Ada") use "embedded-rpi-pico";
    -- C++ not supported for arm-eabi currently.
    for Languages use ("Ada", "C", "ASM_CPP");
 

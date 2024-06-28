@@ -14,18 +14,19 @@ licenses = "Apache-2.0"
 # Project file lives with the hello pico program:
 project-files = ["src/pico_util/hello_pico/hello_pico.gpr"]
 
-tags = ["embedded", "framework", "demo", "rp2040", "raspberrypi"]
+tags = ["embedded", "framework", "demo", "rp2040", "raspberrypi", "arm"]
 website = "https://github.com/lasp/adamant_example"
 
+# Depend on forks of the rp2040_hal & pico_bsp that don't conflict with
+# the pico runtimes provided in the gnat_arm_elf crate.
 [[depends-on]]
-ravenscar_full_rp2040 = "~0.2.0"
+rp2040_hal = "^2.3.0"
 [[pins]]
-ravenscar_full_rp2040 = { url='https://github.com/dinkelk/ravenscar_full_rp2040.git', branch="pico-bsp" }
-
+rp2040_hal = { url='https://github.com/dinkelk/rp2040_hal.git', branch="ravenscar" }
 [configuration.values]
 rp2040_hal.Use_Startup = false
 
 [[depends-on]]
-pico_bsp = "^2.0.0"
+pico_bsp = "^2.1.0"
 [[pins]]
 pico_bsp = { url='https://github.com/dinkelk/pico_bsp.git', branch="ravenscar" }
