@@ -3,7 +3,7 @@ import os.path
 
 #
 # This file contains the cross compile build targets for the
-# Raspberry Pi Pico microprocessor. It utilizes the embedded-rpi-pico-smp
+# Raspberry Pi Pico microprocessor. It utilizes the embedded-rpi-pico
 # runtime provided in the gnat_arm_elf Alire crate.
 #
 

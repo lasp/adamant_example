@@ -1,5 +1,4 @@
 with "../../../config/adamant_example_config.gpr";
-with "ravenscar_build.gpr";
 
 -- This project simply compiles a hello world to make sure the alire environment
 -- for the Adamant example is functioning properly. This alire environment contains
@@ -9,7 +8,7 @@ project Hello_Pico is
    -- Use the arm-eabi-elf cross compiler with a Ravenscar tasking
    -- runtime.
    for Target use "arm-eabi";
-   for Runtime ("Ada") use Ravenscar_Build'Runtime ("Ada");
+   for Runtime ("Ada") use "embedded-rpi-pico";
 
    -- Add the Raspberry Pi Pico hello world as source file.
    for Source_Dirs use (".", "../../../config/");
