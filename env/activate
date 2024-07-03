@@ -27,6 +27,29 @@ export ADAMANT_CONFIGURATION_YAML=$EXAMPLE_DIR/config/example.configuration.yaml
 # Activate the Adamant environment:
 . $ADAMANT_DIR/env/activate $EXAMPLE_DIR
 
+# Temporary fix for https://github.com/alire-project/GNAT-FSF-builds/issues/69. This can
+# go away when a new release of gnat_arm_elf fixes this issue >14.1.3,
+# see: https://alire.ada.dev/crates/gnat_arm_elf
+arm_elf_dir=`which arm-eabi-gcc | xargs dirname | xargs dirname`
+pico_runtime_dir="$arm_elf_dir/arm-eabi/lib/gnat/embedded-rpi-pico"
+pico_runtime_gnarl_dir="$pico_runtime_dir/gnarl_user"
+mirror="https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-14/gcc/ada/libgnarl"
+installed=0
+if [[ ! -f "$pico_runtime_gnarl_dir/s-putaim.adb" ]]
+then
+  wget -P $pico_runtime_gnarl_dir $mirror/s-putaim.adb
+  installed=1
+fi
+if [[ ! -f "$pico_runtime_gnarl_dir/s-putaim.ads" ]]
+then
+  wget -P $pico_runtime_gnarl_dir $mirror/s-putaim.ads
+  installed=1
+fi
+if [[ $installed -eq 1 ]]
+then
+  gprbuild -P $pico_runtime_dir/ravenscar_build.gpr
+fi
+
 # Signify the environment it set up:
 export EXAMPLE_ENVIRONMENT_SET="yes"
 
