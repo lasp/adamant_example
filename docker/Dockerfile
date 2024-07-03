@@ -46,5 +46,10 @@ RUN cp /root/.bashrc $HOME/.bashrc \
     && echo "cd $HOME && [ -f "~/adamant_example/env/activate" ] && source adamant_example/env/activate" >> $HOME/.bashrc \
     && chown -R $DOCKER_USER:$DOCKER_USER $HOME
 
+# Install wget. We need it to implement temporary fix
+# for https://github.com/alire-project/GNAT-FSF-builds/issues/69.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -yq wget
+
 # Make sure user is user at end.
 USER user
