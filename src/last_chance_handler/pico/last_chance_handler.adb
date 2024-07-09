@@ -35,10 +35,10 @@ package body Last_Chance_Handler is
 
       -- Exception data packed record:
       Packed_Exception_Data : Packed_Exception_Occurrence.T := (
-         Exception_Name => (others => 0),
-         Exception_Message => (others => 0),
+         Exception_Name => [others => 0],
+         Exception_Message => [others => 0],
          Stack_Trace_Depth => 0,
-         Stack_Trace => (others => (Address => To_Address (Integer_Address (0))))
+         Stack_Trace => [others => (Address => To_Address (Integer_Address (0)))]
       );
    begin
       -- Copy the name into the first section.
@@ -152,7 +152,7 @@ package body Last_Chance_Handler is
                      Sequence_Count => 0,
                      Packet_Length => Unsigned_16 (Sys_Time.Size_In_Bytes + Packed_Exception_Data_Bytes'Length + Crc_16_Type'Length - 1)
                   ),
-                  Data => (others => 0)
+                  Data => [others => 0]
                );
                -- Sequence count:
                Cnt : Ccsds_Primary_Header.Ccsds_Sequence_Count_Type := 0;

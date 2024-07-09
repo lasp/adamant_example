@@ -55,8 +55,8 @@ package Component.Parameter_Manager.Implementation.Tester is
       Expect_Command_T_Send_Dropped : Boolean := False;
       Command_T_Send_Dropped_Count : Natural := 0;
       -- Memory regions for simulation:
-      Default : Basic_Types.Byte_Array (0 .. 99) := (others => 14);
-      Working : Basic_Types.Byte_Array (0 .. 99) := (others => 14);
+      Default : Basic_Types.Byte_Array (0 .. 99) := [others => 14];
+      Working : Basic_Types.Byte_Array (0 .. 99) := [others => 14];
    end record;
    type Instance_Access is access all Instance;
 
