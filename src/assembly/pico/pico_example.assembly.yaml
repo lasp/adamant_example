@@ -12,7 +12,7 @@ with:
   - Pico_Example_Fault_Responses
   - Ccsds_Space_Packet
 preamble: |
-  Dividers : aliased Component.Tick_Divider.Divider_Array_Type := (1 => 5, 2 => 10, 3 => 1);
+  Dividers : aliased Component.Tick_Divider.Divider_Array_Type := [1 => 5, 2 => 10, 3 => 1];
 ########################################
 components:
 ########################################
@@ -101,7 +101,7 @@ components:
       - "Event_Id_Start => Pico_Example_Events.Minimum_Event_Id"
       - "Event_Id_Stop => Pico_Example_Events.Maximum_Event_Id"
       - "Event_Limit_Persistence => 5"
-      - "Event_Disable_List => (0 => Pico_Example_Events.Ccsds_Serial_Interface_Instance_Have_Not_Seen_Sync_Pattern)"
+      - "Event_Disable_List => [0 => Pico_Example_Events.Ccsds_Serial_Interface_Instance_Have_Not_Seen_Sync_Pattern]"
   - type: Event_Packetizer
     description: This component gathers events and packetizes them for downlink.
     init:

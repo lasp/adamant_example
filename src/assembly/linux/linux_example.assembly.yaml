@@ -21,7 +21,7 @@ prepreamble: |
   pragma Unreferenced (Start_Up);
   pragma Elaborate_All (Start_Up);
 preamble: |
-  Dividers : aliased Component.Tick_Divider.Divider_Array_Type := (1 => 5, 2 => 10, 3 => 1);
+  Dividers : aliased Component.Tick_Divider.Divider_Array_Type := [1 => 5, 2 => 10, 3 => 1];
 ########################################
 components:
 ########################################

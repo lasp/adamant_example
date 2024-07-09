@@ -15,7 +15,7 @@ package body Diagnostic_Uart is
    end Get;
 
    procedure Put (B : in Basic_Types.Byte) is
-      Bytes : constant Basic_Types.Byte_Array (0 .. 0) := (0 => B);
+      Bytes : constant Basic_Types.Byte_Array (0 .. 0) := [0 => B];
    begin
       Pico_Uart.Send_Byte_Array (To_Send => Bytes);
    end Put;
