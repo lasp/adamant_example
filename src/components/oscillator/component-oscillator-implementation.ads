@@ -94,6 +94,6 @@ private
       Frequency : in Packed_F32.U;
       Amplitude : in Packed_F32.U;
       Offset : in Packed_F32.U
-   ) return Parameter_Validation_Status.E is (Parameter_Validation_Status.Valid);
+   ) return Parameter_Validation_Status.E;
 
 end Component.Oscillator.Implementation;

@@ -16,6 +16,8 @@ private
 
    -- This unit test exercises the parameters within the component
    overriding procedure Test_Parameters (Self : in out Instance);
+   -- This unit test exercises the implementable validation function
+   overriding procedure Test_Parameter_Validation (Self : in out Instance);
 
    -- Test data and state:
    type Instance is new Oscillator_Tests.Base_Instance with record

@@ -3,6 +3,7 @@
 --------------------------------------------------------------------------------
 
 -- Includes:
+with String_Util;
 with Parameter;
 
 package body Component.Oscillator.Implementation.Tester is
@@ -71,7 +72,8 @@ package body Component.Oscillator.Implementation.Tester is
    ---------------------------------------
    -- Invokee connector primitives:
    ---------------------------------------
-   -- This connector is used to register the components commands with the command router component.
+   -- This connector is used to register the components commands with the command
+   -- router component.
    overriding procedure Command_Response_T_Recv_Sync (Self : in out Instance; Arg : in Command_Response.T) is
    begin
       -- Push the argument onto the test history for looking at later:
@@ -186,13 +188,21 @@ package body Component.Oscillator.Implementation.Tester is
    -----------------------------------------------
    -- Force the component to drain the entire queue
    not overriding function Dispatch_All (Self : in out Instance) return Natural is
+      Num_Dispatched : Natural;
    begin
-      return Self.Component_Instance.Dispatch_All;
+      Self.Log ("    Dispatching all items off queue.");
+      Num_Dispatched := Self.Component_Instance.Dispatch_All;
+      Self.Log ("    Dispatched " & String_Util.Trim_Both (Natural'Image (Num_Dispatched)) & " items from queue.");
+      return Num_Dispatched;
    end Dispatch_All;
 
    not overriding function Dispatch_N (Self : in out Instance; N : in Positive := 1) return Natural is
+      Num_Dispatched : Natural;
    begin
-      return Self.Component_Instance.Dispatch_N (N);
+      Self.Log ("    Dispatching up to " & String_Util.Trim_Both (Positive'Image (N)) & " items from queue.");
+      Num_Dispatched := Self.Component_Instance.Dispatch_N (N);
+      Self.Log ("    Dispatched " & String_Util.Trim_Both (Natural'Image (Num_Dispatched)) & " items from queue.");
+      return Num_Dispatched;
    end Dispatch_N;
 
    -----------------------------------------------
@@ -240,5 +250,14 @@ package body Component.Oscillator.Implementation.Tester is
       Self.Parameter_Update_T_Provide (Param_Update);
       return Param_Update.Status;
    end Update_Parameters;
+
+   -----------------------------------------------
+   -- Custom functions for white-box testing
+   -----------------------------------------------
+   -- Get the component working frequency
+   not overriding function Get_Component_Frequency (Self : in Instance) return Packed_F32.T is
+   begin
+      return Packed_F32.T (Self.Component_Instance.Frequency);
+   end Get_Component_Frequency;
 
 end Component.Oscillator.Implementation.Tester;

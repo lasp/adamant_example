@@ -128,4 +128,30 @@ package body Component.Oscillator.Implementation is
       ));
    end Invalid_Parameter;
 
+   -- This function is called when the parameter operation type is "Validate". The default implementation of this
+   -- subprogram in the implementation package is a function that returns "Valid". However, this function can, and should be
+   -- overridden if something special needs to happen to further validate a parameter. Examples of this might be validation of
+   -- certain parameters beyond individual type ranges, or performing other special functionality that only needs to be
+   -- performed after parameters have been validated. Note that range checking is performed during staging, and does not need
+   -- to be implemented here.
+
+   -- In this case, the action is implemented with an arbitrary validation requirement to provide an example, as well as
+   -- allowing unit testing of the validation action itself.
+   overriding function Validate_Parameters (
+      Self : in out Instance;
+      Frequency : in Packed_F32.U;
+      Amplitude : in Packed_F32.U;
+      Offset : in Packed_F32.U
+   ) return Parameter_Validation_Status.E is
+      Ignore : Instance renames Self;
+   begin
+      -- We want to apply extended validation to this component's parameters, so check for an "invalid" parameter value:
+      if Frequency.Value = 999.0
+      then
+         return Parameter_Validation_Status.Invalid;
+      else
+         return Parameter_Validation_Status.Valid;
+      end if;
+   end Validate_Parameters;
+
 end Component.Oscillator.Implementation;

@@ -6,6 +6,8 @@ with Parameter_Enums.Assertion;
 use Parameter_Enums.Parameter_Update_Status;
 use Parameter_Enums.Assertion;
 with Parameter.Assertion; use Parameter.Assertion;
+with Parameter_Update;
+with Packed_F32.Assertion; use Packed_F32.Assertion;
 
 package body Oscillator_Tests.Implementation is
 
@@ -65,5 +67,69 @@ package body Oscillator_Tests.Implementation is
       -- Make sure parameters changed:
       Check_Parameters (2.9, 7.8, 0.4);
    end Test_Parameters;
+
+   -- This unit test exercises the implementable validation function
+   overriding procedure Test_Parameter_Validation (Self : in out Instance) is
+      T : Component.Oscillator.Implementation.Tester.Instance_Access renames Self.Tester;
+
+      procedure Check_Frequency (Frequency : in Short_Float) is
+         Param_Frequency : constant Parameter.T := T.Parameters.Frequency ((Value => Frequency));
+         Param : Parameter.T;
+      begin
+         Parameter_Update_Status_Assert.Eq (T.Fetch_Parameter (T.Parameters.Get_Frequency_Id, Param), Success);
+         Parameter_Assert.Eq (Param, Param_Frequency);
+      end Check_Frequency;
+      Test_Param_Update : Parameter_Update.T;
+   begin
+      -- Validate the frequency:
+      Test_Param_Update.Operation := Parameter_Enums.Parameter_Operation_Type.Validate;
+      -- Set to a valid value and assert:
+      Parameter_Update_Status_Assert.Eq (T.Stage_Parameter (T.Parameters.Frequency ((Value => 5.1))), Success);
+      T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
+      Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Success);
+
+      -- Send a tick:
+      Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
+      -- Make sure staged frequency parameter changed:
+      Check_Frequency (5.1);
+      -- Make sure working frequency parameter hasn't changed from default:
+      Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 0.175));
+
+      -- Update the frequency:
+      Test_Param_Update.Operation := Parameter_Enums.Parameter_Operation_Type.Update;
+      T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
+      -- Check status:
+      Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Success);
+      -- Send a tick to update parameters:
+      Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
+      -- Make sure frequency parameter changed:
+      Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 5.1));
+
+      -- Set to an invalid value (arbitrarily forced 999.0 invalid in implementation)
+      -- Validate a parameter:
+      Test_Param_Update.Operation := Parameter_Enums.Parameter_Operation_Type.Validate;
+      -- assert:
+      Parameter_Update_Status_Assert.Eq (T.Stage_Parameter (T.Parameters.Frequency ((Value => 999.0))), Success);
+      T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
+      Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Validation_Error);
+
+      -- Send a tick:
+      Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
+      -- Make sure staged frequency parameter changed:
+      Check_Frequency (999.0);
+      -- Make sure working frequency parameter hasn't changed:
+      Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 5.1));
+
+      -- Update the frequency:
+      Test_Param_Update.Operation := Parameter_Enums.Parameter_Operation_Type.Update;
+      T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
+      -- Check status:
+      Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Success);
+      -- Send a tick to update parameters:
+      Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
+      -- Make sure frequency parameter changed:
+      Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 999.0));
+
+   end Test_Parameter_Validation;
 
 end Oscillator_Tests.Implementation;
