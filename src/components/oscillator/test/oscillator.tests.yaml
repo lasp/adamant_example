@@ -3,3 +3,5 @@ description: This is a unit test suite for the oscillator component
 tests:
   - name: Test_Parameters
     description: This unit test exercises the parameters within the component
+  - name: Test_Parameter_Validation
+    description: This unit test exercises the implementable validation function

@@ -76,7 +76,8 @@ package Component.Oscillator.Implementation.Tester is
    ---------------------------------------
    -- Invokee connector primitives:
    ---------------------------------------
-   -- This connector is used to register the components commands with the command router component.
+   -- This connector is used to register the components commands with the command
+   -- router component.
    overriding procedure Command_Response_T_Recv_Sync (Self : in out Instance; Arg : in Command_Response.T);
    -- The data product invoker connector
    overriding procedure Data_Product_T_Recv_Sync (Self : in out Instance; Arg : in Data_Product.T);
@@ -137,5 +138,11 @@ package Component.Oscillator.Implementation.Tester is
    -- Tell the component it is OK to atomically update all of its
    -- working parameter values with the staged values.
    not overriding function Update_Parameters (Self : in out Instance) return Parameter_Update_Status.E;
+
+   -----------------------------------------------
+   -- Custom functions for white-box testing
+   -----------------------------------------------
+   -- Get the component working frequency
+   not overriding function Get_Component_Frequency (Self : in Instance) return Packed_F32.T;
 
 end Component.Oscillator.Implementation.Tester;
