@@ -115,6 +115,3 @@ command_registration_delay: 250 # microseconds
 # Examples of a project specific variables:
 # project_specific_variable: 17
 # project_specific_string: "This project rocks!"
-
-# Add URL to CodePeer IDE server:
-# codepeer_ide_server: http://path:8081
