@@ -1,0 +1,33 @@
+with "pico_bsp.gpr";
+
+project pico_development extends all "a_bareboard_safe.gpr" is
+
+   -----------------------------------------------
+   -- These lines of code must be included at the
+   -- top of every Adamant based .gpr file. They
+   -- are used to connect the Adamant build system
+   -- to GPRBuild.
+   -----------------------------------------------
+   for Source_Dirs use a_adamant.SOURCE_DIRS;
+   for Object_Dir use a_adamant.OBJECT_DIR;
+   for Exec_Dir use a_adamant.EXEC_DIR;
+
+   -- Specify cross compiler ARM target and Ravenscar runtime:
+   for Target use "arm-eabi";
+   for Runtime ("Ada") use "embedded-rpi-pico";
+   -- C++ not supported for arm-eabi currently.
+   for Languages use ("Ada", "C", "ASM_CPP");
+
+   -- Common binder switches:
+   package Binder is
+      for Switches ("Ada") use a_bareboard_base.Binder'Switches ("Ada") &
+         -- Store tracebacks in exception occurrences
+         -- https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gnat_ugn_unw/Switches-for-gnatbind.html
+         ("-E");
+   end Binder;
+
+   package Linker is
+      for Switches ("Ada") use a_bareboard_base.Linker'Switches ("Ada");
+   end Linker;
+
+end pico_development;

@@ -2,7 +2,7 @@
 from util import target
 from os import environ, path
 
-target.set_target("Pico")
+target.set_target_if_not_set("Pico")
 try:
     adamant_dir = environ['ADAMANT_DIR']
 except KeyError:
