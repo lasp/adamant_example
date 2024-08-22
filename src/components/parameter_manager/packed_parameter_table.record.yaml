@@ -1,0 +1,11 @@
+---
+description: Generic parameter packet for holding a parameter table
+fields:
+  - name: Header
+    description: The parameter table header
+    type: Parameter_Manager_Table_Header.T
+  - name: Table_Buffer
+    description: A buffer that contains the parameter table
+    type: Parameter_Manager_Types.Parameter_Manager_Buffer_Type
+    format: U8x{{ command_buffer_size - 8 }}
+    variable_length: Header.Table_Buffer_Length

@@ -4,13 +4,13 @@ execution: active
 init:
   description: Initialization parameters for the Parameter Manager.
   parameters:
-    - name: parameter_Table_Length
-      type: Natural
-      description: The size of the parameter table in bytes. This must be known to the component so it can construct correct sized memory regions for the downstream components.
-    - name: ticks_Until_Timeout
+    - name: Ticks_Until_Timeout
       type: Natural
       description: The component will wait until it has received at least this many ticks before reporting a timeout error while waiting for a parameter update/fetch response from either the working or default parameter components. For example, if the component is attached to a 10Hz rate group and this value is set to 7, then the component will wait between 700 and 800 ms before declaring a timeout error from an unresponsive downstream component.
 connectors:
+  ###################################
+  # Invokee Connectors
+  ###################################
   - description: The component should be attached to a periodic tick that is used to timeout waiting for a parameter update/fetch response. See the ticks_Until_Timeout initialization parameter.
     name: Timeout_Tick_Recv_Sync
     type: Tick.T
@@ -18,6 +18,12 @@ connectors:
   - description: The command receive connector.
     type: Command.T
     kind: recv_async
+  - description: Parameter update/fetch responses are returned synchronously on this connector. The component waits internally for this response, or times out if the response is not received in time.
+    type: Parameters_Memory_Region_Release.T
+    kind: recv_sync
+  ###################################
+  # Invoker Connectors
+  ###################################
   - description: This connector is used to send the command response back to the command router.
     type: Command_Response.T
     kind: send
@@ -25,13 +31,17 @@ connectors:
     description: Requests to update/fetch the working parameters are made on this connector.
     type: Parameters_Memory_Region.T
     kind: send
-  - name: Default_Parameters_Memory_Region_Send
+  - name: Primary_Parameters_Memory_Region_Send
     description: Requests to update/fetch the default parameters are made on this connector.
     type: Parameters_Memory_Region.T
     kind: send
-  - description: Parameter update/fetch responses are returned synchronously on this connector. The component waits internally for this response, or times out if the response is not received in time.
-    type: Parameters_Memory_Region_Release.T
-    kind: recv_sync
+  - name: Redundant_Parameters_Memory_Region_Send
+    description: Requests to update/fetch the default parameters are made on this connector.
+    type: Parameters_Memory_Region.T
+    kind: send
+  - description: The destination for fetched data products to be sent to.
+    type: Data_Product.T
+    kind: send
   - description: The event send connector
     type: Event.T
     kind: send

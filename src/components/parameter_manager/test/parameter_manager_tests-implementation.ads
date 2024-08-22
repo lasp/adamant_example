@@ -14,15 +14,22 @@ private
    overriding procedure Set_Up_Test (Self : in out Instance);
    overriding procedure Tear_Down_Test (Self : in out Instance);
 
-   -- This unit test tests the nominal copy command from default to working.
-   overriding procedure Test_Nominal_Copy_Default_To_Working (Self : in out Instance);
-   -- This unit test tests the nominal copy command from working to default.
-   overriding procedure Test_Nominal_Copy_Working_To_Default (Self : in out Instance);
+   -- This unit test tests the nominal validation command.
+   overriding procedure Test_Nominal_Validation (Self : in out Instance);
+   -- This unit test tests the component's response to a failed validation.
+   overriding procedure Test_Validation_Failure (Self : in out Instance);
+   -- This unit test tests the component's response when the destination component
+   -- does not respond to a validation command before a timeout occurs.
+   overriding procedure Test_Validation_Timeout (Self : in out Instance);
+   -- This unit test tests the nominal copy command.
+   overriding procedure Test_Nominal_Copy (Self : in out Instance);
    -- This unit test tests the component's response to a failed parameter table copy.
    overriding procedure Test_Copy_Failure (Self : in out Instance);
-   -- This unit test tests the component's response when the destination component does not respond to a copy command before a timeout occurs.
+   -- This unit test tests the component's response when the destination component
+   -- does not respond to a copy command before a timeout occurs.
    overriding procedure Test_Copy_Timeout (Self : in out Instance);
-   -- This unit test tests a command or memory region being dropped due to a full queue.
+   -- This unit test tests a command or memory region being dropped due to a full
+   -- queue.
    overriding procedure Test_Full_Queue (Self : in out Instance);
    -- This unit test exercises that an invalid command throws the appropriate event.
    overriding procedure Test_Invalid_Command (Self : in out Instance);

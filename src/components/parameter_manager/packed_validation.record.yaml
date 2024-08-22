@@ -1,0 +1,17 @@
+---
+description: A packed validation record
+fields:
+  - name: Last_Validation_Version
+    description: The version of the most recently validated table.
+    type: Short_Float
+    format: F32
+  - name: Crc_Table
+    description: The CRC of the most recently validated table.
+    type: Crc_16.Crc_16_Type
+    format: U16
+    skip_validation: True
+    byte_image: True
+  - name: Last_Validation_Status
+    description: The status of the most recent table validation operation.
+    type: Parameter_Enums.Parameter_Table_Update_Status.E
+    format: E8

@@ -2,10 +2,7 @@
 -- Parameter_Manager Component Implementation Body
 --------------------------------------------------------------------------------
 
-with Crc_16;
 with Parameter_Enums;
-with Parameter_Manager_Enums;
-with Packet_Types;
 
 package body Component.Parameter_Manager.Implementation is
 
@@ -15,28 +12,25 @@ package body Component.Parameter_Manager.Implementation is
    -- Initialization parameters for the Parameter Manager.
    --
    -- Init Parameters:
-   -- parameter_Table_Length : Natural - The size of the parameter table in bytes. This must be known to the component so it can construct correct sized memory regions for the downstream components.
-   -- ticks_Until_Timeout : Natural - The component will wait until it has received at least this many ticks before reporting a timeout error while waiting for a parameter update/fetch response from either the active or default parameter components. For example, if the component is attached to a 10Hz rate group and this value is set to 7, then the component will wait between 700 and 800 ms before declaring a timeout error from an unresponsive downstream component.
+   -- Ticks_Until_Timeout : Natural - The component will wait until it has received
+   -- at least this many ticks before reporting a timeout error while waiting for a
+   -- parameter update/fetch response from either the working or default parameter
+   -- components. For example, if the component is attached to a 10Hz rate group and
+   -- this value is set to 7, then the component will wait between 700 and 800 ms
+   -- before declaring a timeout error from an unresponsive downstream component.
    --
-   overriding procedure Init (Self : in out Instance; Parameter_Table_Length : in Natural; Ticks_Until_Timeout : in Natural) is
+   overriding procedure Init (Self : in out Instance; Ticks_Until_Timeout : in Natural) is
    begin
-      -- Just save off the init parameters so we can use them later.
-      -- The implementation of this component assumes that the parameter table length fits cleanly in a maximum sized packet.
-      pragma Assert (Self.Parameter_Table_Length + Crc_16.Crc_16_Type'Length <= Packet_Types.Packet_Buffer_Type'Length, "The parameter table must not be larger than the maximum size packet!");
-      Self.Parameter_Table_Length := Parameter_Table_Length;
       -- Save the ticks until timeout.
       Self.Sync_Object.Set_Timeout_Limit (Ticks_Until_Timeout);
-
-      -- Allocate our temporary storage region. See more details in the .ads for why this is needed.
-      Self.Parameter_Bytes := new Basic_Types.Byte_Array (0 .. Self.Parameter_Table_Length - 1);
-      -- Create a memory region that points to this buffer:
-      Self.Parameter_Bytes_Region := (Address => Self.Parameter_Bytes.all'Address, Length => Self.Parameter_Bytes.all'Length);
    end Init;
 
    ---------------------------------------
    -- Invokee connector primitives:
    ---------------------------------------
-   -- The component should be attached to a periodic tick that is used to timeout waiting for a parameter update/fetch response. See the ticks_Until_Timeout initialization parameter.
+   -- The component should be attached to a periodic tick that is used to timeout
+   -- waiting for a parameter update/fetch response. See the ticks_Until_Timeout
+   -- initialization parameter.
    overriding procedure Timeout_Tick_Recv_Sync (Self : in out Instance; Arg : in Tick.T) is
       Ignore : Tick.T renames Arg;
    begin
@@ -56,7 +50,9 @@ package body Component.Parameter_Manager.Implementation is
       Self.Command_Response_T_Send_If_Connected ((Source_Id => Arg.Header.Source_Id, Registration_Id => Self.Command_Reg_Id, Command_Id => Arg.Header.Id, Status => Stat));
    end Command_T_Recv_Async;
 
-   -- Parameter update/fetch responses are returned synchronously on this connector. The component waits internally for this response, or times out if the response is not received in time.
+   -- Parameter update/fetch responses are returned synchronously on this connector.
+   -- The component waits internally for this response, or times out if the response
+   -- is not received in time.
    overriding procedure Parameters_Memory_Region_Release_T_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region_Release.T) is
    begin
       -- First set the protected response with the response from the component.
@@ -99,6 +95,7 @@ package body Component.Parameter_Manager.Implementation is
    -- that all copy commands must perform.
    function Wait_For_Response (Self : in out Instance) return Boolean is
       Wait_Timed_Out : Boolean;
+      use Parameter_Enums;
    begin
       -- OK wait for the response.
       Self.Sync_Object.Wait (Wait_Timed_Out);
@@ -127,8 +124,9 @@ package body Component.Parameter_Manager.Implementation is
       return True;
    end Wait_For_Response;
 
-   -- Helper which sends a memory region request (set/get) to the default store.
-   function Copy_To_From_Default (Self : in out Instance; Request : in Parameters_Memory_Region.T) return Boolean is
+   -- Helper function which updates work parameter table data.
+   function Update_Working_Table (Self : in out Instance; Arg : in Parameters_Memory_Region.T) return Command_Execution_Status.E is
+      use Command_Execution_Status;
    begin
       -- First, clear the state of the synchronization
       -- object. This prevents us from just "falling through" the
@@ -138,19 +136,20 @@ package body Component.Parameter_Manager.Implementation is
       -- fresh.
       Self.Sync_Object.Reset;
 
-      -- Send the request to the default component.
-      Self.Default_Parameters_Memory_Region_Send (Request);
+      -- Send the request to the working component.
+      Self.Working_Parameters_Memory_Region_Send_If_Connected (Arg);
 
       -- OK now we wait for and check the response.
       if not Self.Wait_For_Response then
-         return False;
+         return Failure;
       end if;
 
-      return True;
-   end Copy_To_From_Default;
+      return Success;
+   end Update_Working_Table;
 
-   -- Helper which sends a memory region request (set/get) to the default store.
-   function Copy_To_From_Working (Self : in out Instance; Request : in Parameters_Memory_Region.T) return Boolean is
+   -- Helper function which updates default parameter table data.
+   function Update_Primary_Table (Self : in out Instance; Arg : in Parameters_Memory_Region.T) return Command_Execution_Status.E is
+      use Command_Execution_Status;
    begin
       -- First, clear the state of the synchronization
       -- object. This prevents us from just "falling through" the
@@ -160,96 +159,140 @@ package body Component.Parameter_Manager.Implementation is
       -- fresh.
       Self.Sync_Object.Reset;
 
-      -- Send the request to the default component.
-      Self.Working_Parameters_Memory_Region_Send (Request);
+      -- Send the request to the primary component.
+      Self.Primary_Parameters_Memory_Region_Send_If_Connected (Arg);
 
       -- OK now we wait for and check the response.
       if not Self.Wait_For_Response then
-         return False;
-      end if;
-
-      return True;
-   end Copy_To_From_Working;
-
-   -- Helper function which copies parameter table data from default to working.
-   function Copy_Default_To_Working (Self : in out Instance) return Command_Execution_Status.E is
-      use Command_Execution_Status;
-      use Parameter_Enums.Parameter_Table_Operation_Type;
-   begin
-      -- Send a get request to default:
-      if not Self.Copy_To_From_Default ((Region => Self.Parameter_Bytes_Region, Operation => Get)) then
-         return Failure;
-      end if;
-
-      --
-      -- Ok, now we have valid parameter data from the source component. Time to send
-      -- it to the destination.
-      --
-
-      -- Send a set request to working:
-      if not Self.Copy_To_From_Working ((Region => Self.Parameter_Bytes_Region, Operation => Set)) then
          return Failure;
       end if;
 
       return Success;
-   end Copy_Default_To_Working;
-
-   -- Helper function which copies parameter table data from working to default.
-   function Copy_Working_To_Default (Self : in out Instance) return Command_Execution_Status.E is
-      use Command_Execution_Status;
-      use Parameter_Enums.Parameter_Table_Operation_Type;
-   begin
-      -- Send a get request to default:
-      if not Self.Copy_To_From_Working ((Region => Self.Parameter_Bytes_Region, Operation => Get)) then
-         return Failure;
-      end if;
-
-      --
-      -- Ok, now we have valid parameter data from the source component. Time to send
-      -- it to the destination.
-      --
-
-      -- Send a set request to working:
-      if not Self.Copy_To_From_Default ((Region => Self.Parameter_Bytes_Region, Operation => Set)) then
-         return Failure;
-      end if;
-
-      return Success;
-   end Copy_Working_To_Default;
+   end Update_Primary_Table;
 
    -----------------------------------------------
    -- Command handler primitives:
    -----------------------------------------------
    -- Description:
-   --    These are the commands for the Parameter Store component.
-   -- Copy parameter table from source to destination based on the enumeration provided.
-   overriding function Copy_Parameter_Table (Self : in out Instance; Arg : in Packed_Parameter_Table_Copy_Type.T) return Command_Execution_Status.E is
+   --    These are the commands for the Parameter Manager component.
+   -- Send received parameter table to default and working regions.
+   overriding function Update_Parameter_Table (Self : in out Instance; Arg : in Packed_Parameter_Table.T) return Command_Execution_Status.E is
       use Command_Execution_Status;
-      use Parameter_Manager_Enums.Parameter_Table_Copy_Type;
-      To_Return : Command_Execution_Status.E;
+      -- The parameter table header includes the Table_Buffer_Length
+      -- before the CRC table, so the region must be taken from the
+      -- CRC table address instead of from the beginning. The region
+      -- length must be the Table_Buffer_Length size in bytes plus
+      -- the size in bytes of the CRC table and the version.
+      Parameter_Table_Region : constant Parameters_Memory_Region.T := (
+         Region => (
+            Address => Arg.Header.Crc_Table'Address,
+            Length => Arg.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes
+         ),
+         Operation => (Parameter_Enums.Parameter_Table_Operation_Type.Set)
+      );
    begin
       -- Info event:
-      Self.Event_T_Send_If_Connected (Self.Events.Starting_Parameter_Table_Copy (Self.Sys_Time_T_Get, Arg));
+      Self.Event_T_Send_If_Connected (Self.Events.Starting_Parameter_Table_Copy (Self.Sys_Time_T_Get, Arg.Header));
 
-      -- Determine the copy source and destination and perform copy:
-      case Arg.Copy_Type is
-         when Default_To_Working =>
-            To_Return := Self.Copy_Default_To_Working;
-         when Working_To_Default =>
-            To_Return := Self.Copy_Working_To_Default;
-      end case;
-
-      -- Check the return status:
-      if To_Return /= Success then
-         -- An error event will have already been sent.
-         return To_Return;
+      if Self.Update_Working_Table (Parameter_Table_Region) /= Success
+      then
+         -- Info event:
+         Self.Event_T_Send_If_Connected (Self.Events.Working_Table_Update_Failure (
+            Timestamp => Self.Sys_Time_T_Get,
+            Param => (
+               Last_Validation_Header => Arg.Header,
+               Last_Validation_Status => Self.Response.Get_Var.Status
+            )
+         ));
+         return Failure;
       end if;
-
+      if Self.Update_Primary_Table (Parameter_Table_Region) /= Success
+      then
+         -- Info event:
+         Self.Event_T_Send_If_Connected (Self.Events.Primary_Table_Update_Failure (
+            Timestamp => Self.Sys_Time_T_Get,
+            Param => (
+               Last_Validation_Header => Arg.Header,
+               Last_Validation_Status => Self.Response.Get_Var.Status
+            )
+         ));
+         return Failure;
+      end if;
       -- Info event:
-      Self.Event_T_Send_If_Connected (Self.Events.Finished_Parameter_Table_Copy (Self.Sys_Time_T_Get, Arg));
-
+      Self.Event_T_Send_If_Connected (Self.Events.Finished_Parameter_Table_Copy (Self.Sys_Time_T_Get, Arg.Header));
       return Success;
-   end Copy_Parameter_Table;
+   end Update_Parameter_Table;
+
+   -- Validate a received parameter table.
+   overriding function Validate_Parameter_Table (Self : in out Instance; Arg : in Packed_Parameter_Table.T) return Command_Execution_Status.E is
+      use Command_Execution_Status;
+      -- The parameter table header includes the Table_Buffer_Length
+      -- before the CRC table, so the region must be taken from the
+      -- CRC table address instead of from the beginning. The region
+      -- length must be the Table_Buffer_Length size in bytes plus
+      -- the size in bytes of the CRC table and the version.
+      Parameter_Table_Region : constant Parameters_Memory_Region.T := (
+         Region => (
+            Address => Arg.Header.Crc_Table'Address,
+            Length => Arg.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes
+         ),
+         Operation => (Parameter_Enums.Parameter_Table_Operation_Type.Validate)
+      );
+   begin
+      -- Validate argument table parameters:
+
+      -- First, clear the state of the synchronization
+      -- object. This prevents us from just "falling through" the
+      -- wait call below if some errant response was sent through
+      -- to us while we were not listening.
+      -- This also resets the timeout counter, so we start
+      -- fresh.
+      Self.Sync_Object.Reset;
+
+      -- Send the request to the working component.
+      Self.Working_Parameters_Memory_Region_Send_If_Connected (Parameter_Table_Region);
+
+      declare
+         -- Update the response:
+         Response : constant Boolean := Self.Wait_For_Response;
+         -- Update the timestamp:
+         Time : constant Sys_Time.T := Self.Sys_Time_T_Get;
+         -- Update the validation status:
+         Validation_Status : constant Parameter_Enums.Parameter_Table_Update_Status.E := Self.Response.Get_Var.Status;
+      begin
+         -- Send out the validation as a data product:
+         Self.Data_Product_T_Send_If_Connected (Self.Data_Products.Validation_Status (
+            Timestamp => Time,
+            Item => (
+               Last_Validation_Version => Arg.Header.Version,
+               Crc_Table => Arg.Header.Crc_Table,
+               Last_Validation_Status => Validation_Status
+            )
+         ));
+         case Response is
+            when False =>
+               -- Throw event:
+               Self.Event_T_Send_If_Connected (Self.Events.Table_Validation_Failure (
+                  Timestamp => Time,
+                  Param => (
+                     Last_Validation_Header => Arg.Header,
+                     Last_Validation_Status => Validation_Status
+                  )
+               ));
+               return Failure;
+            when True =>
+               -- Throw event:
+               Self.Event_T_Send_If_Connected (Self.Events.Table_Validation_Success (
+                  Timestamp => Time,
+                  Param => (
+                     Last_Validation_Header => Arg.Header,
+                     Last_Validation_Status => Validation_Status
+                  )
+               ));
+               return Success;
+         end case;
+      end;
+   end Validate_Parameter_Table;
 
    -- Invalid command handler. This procedure is called when a command's arguments are found to be invalid:
    overriding procedure Invalid_Command (Self : in out Instance; Cmd : in Command.T; Errant_Field_Number : in Unsigned_32; Errant_Field : in Basic_Types.Poly_Type) is

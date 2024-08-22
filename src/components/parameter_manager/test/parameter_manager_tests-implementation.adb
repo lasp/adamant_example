@@ -4,21 +4,25 @@
 
 with Ada.Real_Time;
 with Basic_Assertions; use Basic_Assertions;
-with Command_Response.Assertion; use Command_Response.Assertion;
 with Command_Enums; use Command_Enums.Command_Response_Status;
+with Serializer_Types; use Serializer_Types;
+with Smart_Assert;
+with System; use System;
 with Command;
+with Command_Header.Assertion; use Command_Header.Assertion;
+with Command_Response.Assertion; use Command_Response.Assertion;
+with Parameters_Memory_Region;
 with Interfaces; use Interfaces;
-with Memory_Region;
-with Parameters_Memory_Region.Assertion; use Parameters_Memory_Region.Assertion;
-with Parameters_Memory_Region_Release.Assertion; use Parameters_Memory_Region_Release.Assertion;
-with Parameter_Enums;
-with Parameter_Manager_Enums; use Parameter_Manager_Enums.Parameter_Table_Copy_Type;
+with Parameter_Enums; use Parameter_Enums.Parameter_Table_Update_Status;
 with Basic_Types;
 with Invalid_Command_Info.Assertion; use Invalid_Command_Info.Assertion;
-with Command_Header.Assertion; use Command_Header.Assertion;
-with Packed_Parameter_Table_Copy_Type.Assertion; use Packed_Parameter_Table_Copy_Type.Assertion;
-use Parameter_Enums.Parameter_Table_Update_Status;
-use Parameter_Enums.Parameter_Table_Operation_Type;
+with Parameter_Manager_Types;
+with Parameter_Manager_Commands;
+with Packed_Parameter_Table;
+with Parameter_Manager_Table_Header;
+with Parameter_Manager_Table_Header.Assertion; use Parameter_Manager_Table_Header.Assertion;
+with Packed_Validation_Header;
+with Packed_Validation; use Packed_Validation;
 
 package body Parameter_Manager_Tests.Implementation is
 
@@ -44,13 +48,13 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Response2 := Parameter_Enums.Parameter_Table_Update_Status.Success;
 
       -- Allocate heap memory to component:
-      Self.Tester.Init_Base (Queue_Size => Self.Tester.Component_Instance.Get_Max_Queue_Element_Size * 3);
+      Self.Tester.Init_Base (Queue_Size => Self.Tester.Component_Instance.Get_Max_Queue_Element_Size * 10);
 
       -- Make necessary connections between tester and component:
       Self.Tester.Connect;
 
       -- Call component init here.
-      Self.Tester.Component_Instance.Init (Parameter_Table_Length => 100, Ticks_Until_Timeout => 3);
+      Self.Tester.Component_Instance.Init (Ticks_Until_Timeout => 3);
 
       -- Call the component set up method that the assembly would normally call.
       Self.Tester.Component_Instance.Set_Up;
@@ -81,8 +85,8 @@ package body Parameter_Manager_Tests.Implementation is
       Task_Exit : Boolean_Access
    );
 
-   Sim_Bytes : aliased Basic_Types.Byte_Array := [0 .. 99 => 12];
-   Sim_Bytes_2 : aliased Basic_Types.Byte_Array := [0 .. 99 => 11];
+   Sim_Bytes : aliased Basic_Types.Byte_Array := [0 .. 246 => 12];
+   Sim_Bytes_2 : aliased Basic_Types.Byte_Array := [0 .. 246 => 11];
 
    task body Simulator_Task is
       Ignore : Natural;
@@ -130,336 +134,508 @@ package body Parameter_Manager_Tests.Implementation is
    -------------------------------------------------------------------------
    -- Tests:
    -------------------------------------------------------------------------
-   overriding procedure Test_Nominal_Copy_Default_To_Working (Self : in out Instance) is
+
+   package Ser_Status_Assert is new Smart_Assert.Discrete (Serializer_Types.Serialization_Status, Serializer_Types.Serialization_Status'Image);
+
+   package Validation_Status_Assert is new Smart_Assert.Discrete (Parameter_Enums.Parameter_Table_Update_Status.E, Parameter_Enums.Parameter_Table_Update_Status.E'Image);
+
+   -- This unit test tests the nominal validation command.
+   overriding procedure Test_Nominal_Validation (Self : in out Instance) is
+      use Parameter_Manager_Table_Header;
       T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
       Task_Exit : aliased Boolean := False;
       Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Assert_Header : Packed_Validation_Header.T;
+      Assert_Region_Length : constant Integer := Packed_Table.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes;
+      Assert_Region : Parameters_Memory_Region.T;
+      Assert_Data_Product : Packed_Validation.T;
    begin
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Default_To_Working)));
+      -- Send validate table command:
+      Ser_Status_Assert.Eq (T.Commands.Validate_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
+
+      -- Execute the command and tell the task to respond.
+      Task_Send_Response := True;
+      Natural_Assert.Eq (T.Dispatch_All, 1);
+
+      -- Table validation should have occurred now.
+      -- Assert working parameters connector:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert table validation success:
+      Natural_Assert.Eq (T.Table_Validation_Success_History.Get_Count, 1);
+      -- Assert validation header:
+      Assert_Header := T.Table_Validation_Success_History.Get (1);
+      Parameter_Manager_Table_Header_Assert.Eq (Assert_Header.Last_Validation_Header, Packed_Table.Header);
+      -- Assert last validation status:
+      Validation_Status_Assert.Eq (Assert_Header.Last_Validation_Status, Success);
+      -- Assert data product was produced:
+      Natural_Assert.Eq (T.Data_Product_T_Recv_Sync_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Validation_Status_History.Get_Count, 1);
+      -- Assert data product contents:
+      Assert_Data_Product := T.Validation_Status_History.Get (1);
+      Validation_Status_Assert.Eq (Assert_Data_Product.Last_Validation_Status, Success);
+
+      -- Check command response:
+      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Validate_Parameter_Table_Id, Status => Success));
+
+      -- Kill our helper task.
+      Task_Exit := True;
+   end Test_Nominal_Validation;
+
+   -- This unit test tests the component's response to a failed validation.
+   overriding procedure Test_Validation_Failure (Self : in out Instance) is
+      use Parameter_Manager_Table_Header;
+      T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
+      Task_Exit : aliased Boolean := False;
+      Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Assert_Header : Packed_Validation_Header.T;
+      Assert_Region_Length : constant Integer := Packed_Table.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes;
+      Assert_Region : Parameters_Memory_Region.T;
+      Assert_Data_Product : Packed_Validation.T;
+   begin
+      -- Set task response to something other than success:
+      Task_Response := Parameter_Enums.Parameter_Table_Update_Status.Parameter_Error;
+      -- Send validate table command:
+      Ser_Status_Assert.Eq (T.Commands.Validate_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
+
+      -- Execute the command and tell the task to respond.
+      Task_Send_Response := True;
+      Natural_Assert.Eq (T.Dispatch_All, 1);
+
+      -- Table validation should have occurred now.
+      -- Assert working parameters connector:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert table validation failure:
+      Natural_Assert.Eq (T.Table_Validation_Failure_History.Get_Count, 1);
+      -- Assert validation header:
+      Assert_Header := T.Table_Validation_Failure_History.Get (1);
+      Parameter_Manager_Table_Header_Assert.Eq (Assert_Header.Last_Validation_Header, Packed_Table.Header);
+      -- Assert last validation status:
+      Validation_Status_Assert.Eq (Assert_Header.Last_Validation_Status, Parameter_Error);
+      -- Assert data product was produced:
+      Natural_Assert.Eq (T.Data_Product_T_Recv_Sync_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Validation_Status_History.Get_Count, 1);
+      -- Assert data product contents:
+      Assert_Data_Product := T.Validation_Status_History.Get (1);
+      Validation_Status_Assert.Eq (Assert_Data_Product.Last_Validation_Status, Parameter_Error);
+
+      -- Check command response:
+      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Validate_Parameter_Table_Id, Status => Failure));
+
+      -- Kill our helper task.
+      Task_Exit := True;
+   end Test_Validation_Failure;
+
+   -- This unit test tests the component's response when the destination component
+   -- does not respond to a validation command before a timeout occurs.
+   overriding procedure Test_Validation_Timeout (Self : in out Instance) is
+      use Parameter_Manager_Table_Header;
+      T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
+      Task_Exit : aliased Boolean := False;
+      Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Assert_Header : Packed_Validation_Header.T;
+      Assert_Region_Length : constant Integer := Packed_Table.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes;
+      Assert_Region : Parameters_Memory_Region.T;
+      Assert_Data_Product : Packed_Validation.T;
+   begin
+      -- First, send a normal validate table command:
+      Ser_Status_Assert.Eq (T.Commands.Validate_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
+
+      -- Execute the command and tell the task to respond.
+      Task_Send_Response := True;
+      Natural_Assert.Eq (T.Dispatch_All, 1);
+
+      -- Table validation should have occurred now.
+      -- Assert working parameters connector:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert table validation success:
+      Natural_Assert.Eq (T.Table_Validation_Success_History.Get_Count, 1);
+      -- Assert validation header:
+      Assert_Header := T.Table_Validation_Success_History.Get (1);
+      Parameter_Manager_Table_Header_Assert.Eq (Assert_Header.Last_Validation_Header, Packed_Table.Header);
+      -- Assert last validation status:
+      Validation_Status_Assert.Eq (Assert_Header.Last_Validation_Status, Success);
+      -- Assert data product was produced:
+      Natural_Assert.Eq (T.Data_Product_T_Recv_Sync_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Validation_Status_History.Get_Count, 1);
+      -- Assert data product contents:
+      Assert_Data_Product := T.Validation_Status_History.Get (1);
+      Validation_Status_Assert.Eq (Assert_Data_Product.Last_Validation_Status, Success);
+
+      -- Check command response:
+      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Validate_Parameter_Table_Id, Status => Success));
+
+      -- Test validate table timeout:
+      -- Send validate table command:
+      Ser_Status_Assert.Eq (T.Commands.Validate_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
+
+      -- Execute the command and tell the task to respond.
+      Task_Send_Timeout := True;
+      Natural_Assert.Eq (T.Dispatch_All, 1);
+
+      -- Table validation timeout should have occurred now.
+      -- Assert working parameters connector:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 2);
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (2);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert table validation failure:
+      Natural_Assert.Eq (T.Table_Validation_Failure_History.Get_Count, 1);
+      -- Assert validation header:
+      Assert_Header := T.Table_Validation_Failure_History.Get (1);
+      Parameter_Manager_Table_Header_Assert.Eq (Assert_Header.Last_Validation_Header, Packed_Table.Header);
+      -- Assert last validation status:
+      Validation_Status_Assert.Eq (Assert_Header.Last_Validation_Status, Success);
+      -- Assert data product was produced:
+      Natural_Assert.Eq (T.Data_Product_T_Recv_Sync_History.Get_Count, 2);
+      Natural_Assert.Eq (T.Validation_Status_History.Get_Count, 2);
+      -- Assert data product contents:
+      Assert_Data_Product := T.Validation_Status_History.Get (2);
+      Validation_Status_Assert.Eq (Assert_Data_Product.Last_Validation_Status, Success);
+
+      -- Check command response:
+      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 2);
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (2), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Validate_Parameter_Table_Id, Status => Failure));
+
+      -- Kill our helper task.
+      Task_Exit := True;
+   end Test_Validation_Timeout;
+
+   -- This unit test tests the nominal update table command.
+   overriding procedure Test_Nominal_Copy (Self : in out Instance) is
+      T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
+      Task_Exit : aliased Boolean := False;
+      Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Assert_Header : Parameter_Manager_Table_Header.T;
+      Assert_Region_Length : constant Integer := Packed_Table.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes;
+      Assert_Region : Parameters_Memory_Region.T;
+   begin
+      -- Send update table command:
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
 
       -- Execute the command and tell the task to respond.
       Task_Send_Response_Twice := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy to working should have occurred now. Check data:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
+      -- Table update should have occurred now.
+      -- Assert working parameters connector:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Set)
-      );
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert primary parameters connector:
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
+      -- Assert connector table region length:
+      Assert_Region := T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert primary connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
 
-      -- Check region data:
-      declare
-         Region : constant Memory_Region.T := T.Get_Parameter_Bytes_Region;
-         subtype Safe_Byte_Array_Type is Basic_Types.Byte_Array (0 .. Region.Length - 1);
-         Safe_Byte_Array : Safe_Byte_Array_Type with Import, Convention => Ada, Address => Region.Address;
-      begin
-         Byte_Array_Assert.Eq (Safe_Byte_Array, T.Default);
-      end;
-
-      -- Check events:
+      -- Assert events:
       Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 2);
+      -- Assert start copy header:
       Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 1);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (1), (Copy_Type => Default_To_Working));
+      Assert_Header := T.Starting_Parameter_Table_Copy_History.Get (1);
+      -- Assert start copy header address is not null:
+      Address_Assert.Neq (Assert_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert start copy header length:
+      Natural_Assert.Eq (Assert_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
+      -- Assert no failure events:
+      Natural_Assert.Eq (T.Working_Table_Update_Failure_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Primary_Table_Update_Failure_History.Get_Count, 0);
+      -- Assert finished copy header:
       Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 1);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get (1), (Copy_Type => Default_To_Working));
+      Assert_Header := T.Finished_Parameter_Table_Copy_History.Get (1);
+      -- Assert finished copy header address is not null:
+      Address_Assert.Neq (Assert_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert finished copy header length:
+      Natural_Assert.Eq (Assert_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
 
       -- Check command response:
       Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Success));
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Success));
 
       -- Kill our helper task.
       Task_Exit := True;
-   end Test_Nominal_Copy_Default_To_Working;
+   end Test_Nominal_Copy;
 
-   overriding procedure Test_Nominal_Copy_Working_To_Default (Self : in out Instance) is
-      T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
-      Task_Exit : aliased Boolean := False;
-      Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
-   begin
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Working_To_Default)));
-
-      -- Execute the command and tell the task to respond.
-      Task_Send_Response_Twice := True;
-      Natural_Assert.Eq (T.Dispatch_All, 1);
-
-      -- Copy to working should have occurred now. Check data:
-      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Set)
-      );
-
-      -- Check region data:
-      declare
-         Region : constant Memory_Region.T := T.Get_Parameter_Bytes_Region;
-         subtype Safe_Byte_Array_Type is Basic_Types.Byte_Array (0 .. Region.Length - 1);
-         Safe_Byte_Array : Safe_Byte_Array_Type with Import, Convention => Ada, Address => Region.Address;
-      begin
-         Byte_Array_Assert.Eq (Safe_Byte_Array, T.Working);
-      end;
-
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 2);
-      Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 1);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (1), (Copy_Type => Working_To_Default));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 1);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get (1), (Copy_Type => Working_To_Default));
-
-      -- Check command response:
-      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Success));
-
-      -- Kill our helper task.
-      Task_Exit := True;
-   end Test_Nominal_Copy_Working_To_Default;
-
+   -- This unit test tests the component's response to a failed parameter table copy.
    overriding procedure Test_Copy_Failure (Self : in out Instance) is
       T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
       Task_Exit : aliased Boolean := False;
       Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Assert_Validation_Header : Packed_Validation_Header.T;
+      Assert_Header : Parameter_Manager_Table_Header.T;
+      Assert_Region_Length : constant Integer := Packed_Table.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes;
+      Assert_Region : Parameters_Memory_Region.T;
    begin
       -- Set task response to something other than success:
       Task_Response := Parameter_Enums.Parameter_Table_Update_Status.Parameter_Error;
 
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Working_To_Default)));
+      -- Send update table command:
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
 
       -- Execute the command and tell the task to respond.
       Task_Send_Response := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occurred now. Check data:
+      -- Working table update should have been attempted now.
+      -- Assert working parameters connector:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-      -- No copy to default:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert no primary primary connector after working parameter update failure:
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
 
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 2);
+      -- Assert events:
+      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 3);
+      -- Assert start copy header:
       Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 1);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (1), (Copy_Type => Working_To_Default));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
+      Assert_Header := T.Starting_Parameter_Table_Copy_History.Get (1);
+      -- Assert start copy header address is not null:
+      Address_Assert.Neq (Assert_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert start copy header length:
+      Natural_Assert.Eq (Assert_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
+      -- Assert expected failure events:
       Natural_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get_Count, 1);
-      Parameters_Memory_Region_Release_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get (1), (
-         Region => (Address => Sim_Bytes'Address, Length => Sim_Bytes'Length),
-         Status => Parameter_Enums.Parameter_Table_Update_Status.Parameter_Error
-      ));
+      Natural_Assert.Eq (T.Working_Table_Update_Failure_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Primary_Table_Update_Failure_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
+      Assert_Validation_Header := T.Working_Table_Update_Failure_History.Get (1);
+      -- Assert working copy failure header address is not null:
+      Address_Assert.Neq (Assert_Validation_Header.Last_Validation_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert working copy failure header length:
+      Natural_Assert.Eq (Assert_Validation_Header.Last_Validation_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
 
       -- Check command response:
       Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Failure));
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Failure));
 
-      -- Set task response 2 to something other than success:
-      Task_Response := Parameter_Enums.Parameter_Table_Update_Status.Crc_Error;
-      Task_Response2 := Parameter_Enums.Parameter_Table_Update_Status.Success;
+      -- Set working table task response to something other than success:
+      Task_Response := Parameter_Enums.Parameter_Table_Update_Status.Parameter_Error;
 
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Working_To_Default)));
+      -- Send update table command:
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
 
       -- Execute the command and tell the task to respond.
       Task_Send_Response_Twice := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occurred now. Check data:
+      -- Primary table update should have been attempted now.
+      -- Assert working parameters connector:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 2);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (2),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-      -- Copy to default:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Set)
-      );
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (2);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert primary parameters connector:
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
+      -- Assert connector table region length:
+      Assert_Region := T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert primary connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
 
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 4);
+      -- Assert events:
+      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 6);
+      -- Assert start copy header:
       Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 2);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (2), (Copy_Type => Working_To_Default));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
+      Assert_Header := T.Starting_Parameter_Table_Copy_History.Get (2);
+      -- Assert start copy header address is not null:
+      Address_Assert.Neq (Assert_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert start copy header length:
+      Natural_Assert.Eq (Assert_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
+      -- Assert expected failure events:
       Natural_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get_Count, 2);
-      Parameters_Memory_Region_Release_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get (2), (
-         Region => (Address => Sim_Bytes'Address, Length => Sim_Bytes'Length),
-         Status => Parameter_Enums.Parameter_Table_Update_Status.Crc_Error
-      ));
+      Natural_Assert.Eq (T.Working_Table_Update_Failure_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Primary_Table_Update_Failure_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
+      Assert_Validation_Header := T.Primary_Table_Update_Failure_History.Get (1);
+      -- Assert primary copy failure header address is not null:
+      Address_Assert.Neq (Assert_Validation_Header.Last_Validation_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert primary copy failure header length:
+      Natural_Assert.Eq (Assert_Validation_Header.Last_Validation_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
 
       -- Check command response:
       Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 2);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (2), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Failure));
-
-      -- Set task response 2 to something other than success:
-      Task_Response := Parameter_Enums.Parameter_Table_Update_Status.Crc_Error;
-      Task_Response2 := Parameter_Enums.Parameter_Table_Update_Status.Success;
-
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Default_To_Working)));
-
-      -- Execute the command and tell the task to respond.
-      Task_Send_Response_Twice := True;
-      Natural_Assert.Eq (T.Dispatch_All, 1);
-
-      -- Copy from working should have occurred now. Check data:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 2);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (2),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-      -- Copy to default:
-      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 3);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (3),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Set)
-      );
-
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 6);
-      Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 3);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (3), (Copy_Type => Default_To_Working));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
-      Natural_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get_Count, 3);
-      Parameters_Memory_Region_Release_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get (3), (
-         Region => (Address => Sim_Bytes'Address, Length => Sim_Bytes'Length),
-         Status => Parameter_Enums.Parameter_Table_Update_Status.Crc_Error
-      ));
-
-      -- Check command response:
-      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 3);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (3), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Failure));
-
-      -- Set task response 2 to something other than success:
-      Task_Response := Parameter_Enums.Parameter_Table_Update_Status.Length_Error;
-      Task_Response2 := Parameter_Enums.Parameter_Table_Update_Status.Success;
-
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Default_To_Working)));
-
-      -- Execute the command and tell the task to respond.
-      Task_Send_Response := True;
-      Natural_Assert.Eq (T.Dispatch_All, 1);
-
-      -- Copy from working should have occurred now. Check data:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 3);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (3),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-      -- Copy to default:
-      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 3);
-
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 8);
-      Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 4);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (3), (Copy_Type => Default_To_Working));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
-      Natural_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get_Count, 4);
-      Parameters_Memory_Region_Release_Assert.Eq (T.Parameter_Table_Copy_Failure_History.Get (4), (
-         Region => (Address => Sim_Bytes'Address, Length => Sim_Bytes'Length),
-         Status => Parameter_Enums.Parameter_Table_Update_Status.Length_Error
-      ));
-
-      -- Check command response:
-      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 4);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (4), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Failure));
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (2), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Failure));
 
       -- Kill our helper task.
       Task_Exit := True;
    end Test_Copy_Failure;
 
+   -- This unit test tests the component's response when the destination component
+   -- does not respond to a copy command before a timeout occurs.
    overriding procedure Test_Copy_Timeout (Self : in out Instance) is
       T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
       Task_Exit : aliased Boolean := False;
       Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Assert_Validation_Header : Packed_Validation_Header.T;
+      Assert_Header : Parameter_Manager_Table_Header.T;
+      Assert_Region_Length : constant Integer := Packed_Table.Header.Table_Buffer_Length + Parameter_Manager_Table_Header.Crc_Table_Size_In_Bytes + Parameter_Manager_Table_Header.Version_Size_In_Bytes;
+      Assert_Region : Parameters_Memory_Region.T;
    begin
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Working_To_Default)));
+      -- Send update table command:
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Packed_Table, Cmd), Success);
+      T.Command_T_Send (Cmd);
 
       -- Execute the command and tell the task to respond with timeout
       Task_Send_Timeout := True;
       Natural_Assert.Eq (T.Dispatch_All, 1);
 
-      -- Copy from working should have occurred now. Check data:
+      -- Table update should have been attempted now.
+      -- Assert working parameters connector:
       Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-      -- No copy to default:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+      -- Assert connector table region length:
+      Assert_Region := T.Working_Parameters_Memory_Region_Recv_Sync_History.Get (1);
+      Natural_Assert.Eq (Assert_Region.Region.Length, Assert_Region_Length);
+      -- Assert working connector address is not null:
+      Address_Assert.Neq (Assert_Region.Region.Address, System.Null_Address);
+      -- Assert no primary primary connector after working parameter update timeout:
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
 
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 2);
+      -- Assert events:
+      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 3);
+      -- Assert start copy header:
       Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 1);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (1), (Copy_Type => Working_To_Default));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
+      Assert_Header := T.Starting_Parameter_Table_Copy_History.Get (1);
+      -- Assert start copy header address is not null:
+      Address_Assert.Neq (Assert_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert start copy header length:
+      Natural_Assert.Eq (Assert_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
+      -- Assert expected failure events:
       Natural_Assert.Eq (T.Parameter_Table_Copy_Timeout_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Working_Table_Update_Failure_History.Get_Count, 1);
+      Natural_Assert.Eq (T.Primary_Table_Update_Failure_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
+      Assert_Validation_Header := T.Working_Table_Update_Failure_History.Get (1);
+      -- Assert working copy failure header address is not null:
+      Address_Assert.Neq (Assert_Validation_Header.Last_Validation_Header.Crc_Table'Address, System.Null_Address);
+      -- Assert working copy failure header length:
+      Natural_Assert.Eq (Assert_Validation_Header.Last_Validation_Header.Table_Buffer_Length, Packed_Table.Header.Table_Buffer_Length);
 
       -- Check command response:
       Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Failure));
-
-      -- Send copy command:
-      T.Command_T_Send (T.Commands.Copy_Parameter_Table ((Copy_Type => Default_To_Working)));
-
-      -- Execute the command and tell the task to respond with timeout
-      -- Wait a bit to make sure our simulator task is reset and ready to go
-      Sleep (50);
-      Task_Send_Timeout := True;
-      Natural_Assert.Eq (T.Dispatch_All, 1);
-
-      -- Copy from working should have occurred now. Check data:
-      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      -- No copy to default:
-      Natural_Assert.Eq (T.Default_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 1);
-      Parameters_Memory_Region_Assert.Eq (
-         T.Default_Parameters_Memory_Region_Recv_Sync_History.Get (1),
-         (Region => T.Get_Parameter_Bytes_Region, Operation => Get)
-      );
-
-      -- Check events:
-      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 4);
-      Natural_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get_Count, 2);
-      Packed_Parameter_Table_Copy_Type_Assert.Eq (T.Starting_Parameter_Table_Copy_History.Get (2), (Copy_Type => Default_To_Working));
-      Natural_Assert.Eq (T.Finished_Parameter_Table_Copy_History.Get_Count, 0);
-      Natural_Assert.Eq (T.Parameter_Table_Copy_Timeout_History.Get_Count, 2);
-
-      -- Check command response:
-      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 2);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (2), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Failure));
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Failure));
 
       -- Kill our helper task.
       Task_Exit := True;
    end Test_Copy_Timeout;
 
+   -- This unit test tests a command or memory region being dropped due to a full
+   -- queue.
    overriding procedure Test_Full_Queue (Self : in out Instance) is
       T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
       Cmd : Command.T;
    begin
-      -- Send 3 commands to fill up queue.
+      -- Send 10 commands to fill up queue.
       Cmd.Header.Arg_Buffer_Length := Cmd.Arg_Buffer'Length;
-      T.Command_T_Send (Cmd);
-      T.Command_T_Send (Cmd);
-      T.Command_T_Send (Cmd);
+      for Index in 0 .. 9 loop
+         T.Command_T_Send (Cmd);
+      end loop;
+
+      -- Assert queue usage is at maximum:
+      Boolean_Assert.Eq (T.Component_Instance.Get_Queue_Current_Percent_Used = T.Component_Instance.Get_Queue_Maximum_Percent_Used, True);
 
       -- OK the next command should overflow the queue.
       T.Expect_Command_T_Send_Dropped := True;
       T.Command_T_Send (Cmd);
+
+      -- Assert nothing received over connectors:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
 
       -- Make sure event thrown:
       Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 1);
@@ -467,23 +643,96 @@ package body Parameter_Manager_Tests.Implementation is
       Command_Header_Assert.Eq (T.Command_Dropped_History.Get (1), Cmd.Header);
    end Test_Full_Queue;
 
+   -- This unit test exercises that an invalid command throws the appropriate event.
    overriding procedure Test_Invalid_Command (Self : in out Instance) is
       T : Component.Parameter_Manager.Implementation.Tester.Instance_Access renames Self.Tester;
-      Cmd : Command.T := T.Commands.Copy_Parameter_Table ((Copy_Type => Working_To_Default));
+      Task_Exit : aliased Boolean := False;
+      Sim_Task : Simulator_Task (Self'Unchecked_Access, Task_Exit'Unchecked_Access);
+      Table : aliased constant Basic_Types.Byte_Array := [0 .. 246 => 10];
+      Packed_Table : constant Packed_Parameter_Table.T := (
+         Header => (
+            Table_Buffer_Length => Table'Length,
+            Crc_Table => [0 .. 1 => 0],
+            Version => 0.0
+         ),
+         Table_Buffer => Table
+      );
+      Cmd : Command.T;
+      Invalid_Table : Packed_Parameter_Table.T;
    begin
-      -- Make the command invalid by modifying its length.
-      Cmd.Header.Arg_Buffer_Length := 22;
+      -- Send update table command:
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Packed_Table, Cmd), Success);
+      -- Make the command invalid by setting the packed table
+      -- header's table buffer length larger than the command
+      -- header argument buffer length:
+      Cmd.Arg_Buffer (1) := Table'Length + 1;
+
+      -- Execute the command and tell the task to respond
+      Task_Send_Response_Twice := True;
+      T.Command_T_Send (Cmd);
 
       -- Send bad command and expect bad response:
-      T.Command_T_Send (Cmd);
       Natural_Assert.Eq (T.Dispatch_All, 1);
       Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 1);
-      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Copy_Parameter_Table_Id, Status => Length_Error));
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (1), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Length_Error));
+
+      -- Assert nothing sent over memory region connectors:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
 
       -- Make sure some events were thrown:
       Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 1);
       Natural_Assert.Eq (T.Invalid_Command_Received_History.Get_Count, 1);
-      Invalid_Command_Info_Assert.Eq (T.Invalid_Command_Received_History.Get (1), (Id => T.Commands.Get_Copy_Parameter_Table_Id, Errant_Field_Number => Interfaces.Unsigned_32'Last, Errant_Field => [0, 0, 0, 0, 0, 0, 0, 22]));
+      Invalid_Command_Info_Assert.Eq (T.Invalid_Command_Received_History.Get (1), (Id => T.Commands.Get_Update_Parameter_Table_Id, Errant_Field_Number => Interfaces.Unsigned_32'Last, Errant_Field => [0, 0, 0, 0, 0, 0, 0, 255]));
+
+      -- Send update table command:
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Packed_Table, Cmd), Success);
+      -- Make the command invalid by setting the command header
+      -- argument buffer length smaller than the packed table
+      -- header's table buffer length:
+      Cmd.Header.Arg_Buffer_Length := 1;
+
+      -- Execute the command and tell the task to respond
+      Task_Send_Response_Twice := True;
+      T.Command_T_Send (Cmd);
+
+      -- Send bad command and expect bad response:
+      Natural_Assert.Eq (T.Dispatch_All, 1);
+      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 2);
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (2), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Length_Error));
+
+      -- Assert nothing sent over memory region connectors:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+
+      -- Make sure some events were thrown:
+      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 2);
+      Natural_Assert.Eq (T.Invalid_Command_Received_History.Get_Count, 2);
+      Invalid_Command_Info_Assert.Eq (T.Invalid_Command_Received_History.Get (2), (Id => T.Commands.Get_Update_Parameter_Table_Id, Errant_Field_Number => Interfaces.Unsigned_32'Last, Errant_Field => [0, 0, 0, 0, 0, 0, 0, 1]));
+
+      -- Send update table command:
+      -- Make the command invalid by setting the packed table
+      -- header's table buffer length out of range for the type:
+      Invalid_Table.Header.Table_Buffer_Length := Parameter_Manager_Types.Parameter_Manager_Buffer_Length_Type'Last;
+      Ser_Status_Assert.Eq (T.Commands.Update_Parameter_Table (Invalid_Table, Cmd), Success);
+
+      -- Execute the command and tell the task to respond
+      Task_Send_Response_Twice := True;
+      T.Command_T_Send (Cmd);
+
+      -- Send bad command and expect bad response:
+      Natural_Assert.Eq (T.Dispatch_All, 1);
+      Natural_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get_Count, 3);
+      Command_Response_Assert.Eq (T.Command_Response_T_Recv_Sync_History.Get (3), (Source_Id => 0, Registration_Id => 0, Command_Id => T.Commands.Get_Update_Parameter_Table_Id, Status => Validation_Error));
+
+      -- Assert nothing sent over memory region connectors:
+      Natural_Assert.Eq (T.Working_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+      Natural_Assert.Eq (T.Primary_Parameters_Memory_Region_Recv_Sync_History.Get_Count, 0);
+
+      -- Make sure some events were thrown:
+      Natural_Assert.Eq (T.Event_T_Recv_Sync_History.Get_Count, 3);
+      Natural_Assert.Eq (T.Invalid_Command_Received_History.Get_Count, 3);
+      Invalid_Command_Info_Assert.Eq (T.Invalid_Command_Received_History.Get (3), (Id => T.Commands.Get_Update_Parameter_Table_Id, Errant_Field_Number => 3, Errant_Field => [0, 0, 0, 0, 247, 0, 0, 0]));
    end Test_Invalid_Command;
 
 end Parameter_Manager_Tests.Implementation;

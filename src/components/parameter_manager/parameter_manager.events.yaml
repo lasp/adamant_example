@@ -3,10 +3,10 @@ description: Events for the Parameter Manager component.
 events:
   - name: Starting_Parameter_Table_Copy
     description: Starting parameter table copy from source to destination.
-    param_type: Packed_Parameter_Table_Copy_Type.T
+    param_type: Parameter_Manager_Table_Header.T
   - name: Finished_Parameter_Table_Copy
     description: Finished parameter table copy from source to destination, without errors.
-    param_type: Packed_Parameter_Table_Copy_Type.T
+    param_type: Parameter_Manager_Table_Header.T
   - name: Invalid_Command_Received
     description: A command was received with invalid parameters.
     param_type: Invalid_Command_Info.T
@@ -15,6 +15,18 @@ events:
   - name: Parameter_Table_Copy_Failure
     description: A parameter table copy failed.
     param_type: Parameters_Memory_Region_Release.T
+  - name: Working_Table_Update_Failure
+    description: A parameter table copy to the working table failed.
+    param_type: Packed_Validation_Header.T
+  - name: Primary_Table_Update_Failure
+    description: A parameter table copy to the primary table failed.
+    param_type: Packed_Validation_Header.T
   - name: Command_Dropped
     description: A command was dropped due to a full queue.
     param_type: Command_Header.T
+  - name: Table_Validation_Failure
+    description: A parameter table validation failed.
+    param_type: Packed_Validation_Header.T
+  - name: Table_Validation_Success
+    description: A parameter table validation was successful.
+    param_type: Packed_Validation_Header.T

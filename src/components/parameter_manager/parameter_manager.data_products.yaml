@@ -1,0 +1,6 @@
+---
+description: Data products for the Parameter Manager component
+data_products:
+  - name: Validation_Status
+    description: The validation status with timestamp and last table ID/version.
+    type: Packed_Validation.T

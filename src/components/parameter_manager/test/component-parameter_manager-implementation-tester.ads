@@ -7,32 +7,47 @@ with Component.Parameter_Manager_Reciprocal;
 with Printable_History;
 with Command_Response.Representation;
 with Parameters_Memory_Region.Representation;
+with Data_Product.Representation;
 with Event.Representation;
 with Sys_Time.Representation;
+with Data_Product;
+with Packed_Validation.Representation;
+with Packed_Validation_Header.Representation;
 with Event;
-with Packed_Parameter_Table_Copy_Type.Representation;
+with Parameter_Manager_Table_Header.Representation;
 with Invalid_Command_Info.Representation;
 with Parameters_Memory_Region_Release.Representation;
 with Command_Header.Representation;
 
--- This component is responsible for managing a working and default parameter table. Its sole responsibility is to respond to commands to copy parameter tables from one region to another.
+-- This component is responsible for managing a working and default parameter
+-- table. Its sole responsibility is to respond to commands to copy parameter
+-- tables from one region to another.
 package Component.Parameter_Manager.Implementation.Tester is
 
    use Component.Parameter_Manager_Reciprocal;
    -- Invoker connector history packages:
    package Command_Response_T_Recv_Sync_History_Package is new Printable_History (Command_Response.T, Command_Response.Representation.Image);
    package Working_Parameters_Memory_Region_Recv_Sync_History_Package is new Printable_History (Parameters_Memory_Region.T, Parameters_Memory_Region.Representation.Image);
-   package Default_Parameters_Memory_Region_Recv_Sync_History_Package is new Printable_History (Parameters_Memory_Region.T, Parameters_Memory_Region.Representation.Image);
+   package Primary_Parameters_Memory_Region_Recv_Sync_History_Package is new Printable_History (Parameters_Memory_Region.T, Parameters_Memory_Region.Representation.Image);
+   package Redundant_Parameters_Memory_Region_Recv_Sync_History_Package is new Printable_History (Parameters_Memory_Region.T, Parameters_Memory_Region.Representation.Image);
+   package Data_Product_T_Recv_Sync_History_Package is new Printable_History (Data_Product.T, Data_Product.Representation.Image);
    package Event_T_Recv_Sync_History_Package is new Printable_History (Event.T, Event.Representation.Image);
    package Sys_Time_T_Return_History_Package is new Printable_History (Sys_Time.T, Sys_Time.Representation.Image);
 
    -- Event history packages:
-   package Starting_Parameter_Table_Copy_History_Package is new Printable_History (Packed_Parameter_Table_Copy_Type.T, Packed_Parameter_Table_Copy_Type.Representation.Image);
-   package Finished_Parameter_Table_Copy_History_Package is new Printable_History (Packed_Parameter_Table_Copy_Type.T, Packed_Parameter_Table_Copy_Type.Representation.Image);
+   package Starting_Parameter_Table_Copy_History_Package is new Printable_History (Parameter_Manager_Table_Header.T, Parameter_Manager_Table_Header.Representation.Image);
+   package Finished_Parameter_Table_Copy_History_Package is new Printable_History (Parameter_Manager_Table_Header.T, Parameter_Manager_Table_Header.Representation.Image);
    package Invalid_Command_Received_History_Package is new Printable_History (Invalid_Command_Info.T, Invalid_Command_Info.Representation.Image);
    package Parameter_Table_Copy_Timeout_History_Package is new Printable_History (Natural, Natural'Image);
    package Parameter_Table_Copy_Failure_History_Package is new Printable_History (Parameters_Memory_Region_Release.T, Parameters_Memory_Region_Release.Representation.Image);
+   package Working_Table_Update_Failure_History_Package is new Printable_History (Packed_Validation_Header.T, Packed_Validation_Header.Representation.Image);
+   package Primary_Table_Update_Failure_History_Package is new Printable_History (Packed_Validation_Header.T, Packed_Validation_Header.Representation.Image);
    package Command_Dropped_History_Package is new Printable_History (Command_Header.T, Command_Header.Representation.Image);
+   package Table_Validation_Failure_History_Package is new Printable_History (Packed_Validation_Header.T, Packed_Validation_Header.Representation.Image);
+   package Table_Validation_Success_History_Package is new Printable_History (Packed_Validation_Header.T, Packed_Validation_Header.Representation.Image);
+
+   -- Data product history packages:
+   package Validation_Status_History_Package is new Printable_History (Packed_Validation.T, Packed_Validation.Representation.Image);
 
    -- Component class instance:
    type Instance is new Component.Parameter_Manager_Reciprocal.Base_Instance with record
@@ -41,7 +56,9 @@ package Component.Parameter_Manager.Implementation.Tester is
       -- Connector histories:
       Command_Response_T_Recv_Sync_History : Command_Response_T_Recv_Sync_History_Package.Instance;
       Working_Parameters_Memory_Region_Recv_Sync_History : Working_Parameters_Memory_Region_Recv_Sync_History_Package.Instance;
-      Default_Parameters_Memory_Region_Recv_Sync_History : Default_Parameters_Memory_Region_Recv_Sync_History_Package.Instance;
+      Primary_Parameters_Memory_Region_Recv_Sync_History : Primary_Parameters_Memory_Region_Recv_Sync_History_Package.Instance;
+      Redundant_Parameters_Memory_Region_Recv_Sync_History : Redundant_Parameters_Memory_Region_Recv_Sync_History_Package.Instance;
+      Data_Product_T_Recv_Sync_History : Data_Product_T_Recv_Sync_History_Package.Instance;
       Event_T_Recv_Sync_History : Event_T_Recv_Sync_History_Package.Instance;
       Sys_Time_T_Return_History : Sys_Time_T_Return_History_Package.Instance;
       -- Event histories:
@@ -50,13 +67,16 @@ package Component.Parameter_Manager.Implementation.Tester is
       Invalid_Command_Received_History : Invalid_Command_Received_History_Package.Instance;
       Parameter_Table_Copy_Timeout_History : Parameter_Table_Copy_Timeout_History_Package.Instance;
       Parameter_Table_Copy_Failure_History : Parameter_Table_Copy_Failure_History_Package.Instance;
+      Working_Table_Update_Failure_History : Working_Table_Update_Failure_History_Package.Instance;
+      Primary_Table_Update_Failure_History : Primary_Table_Update_Failure_History_Package.Instance;
       Command_Dropped_History : Command_Dropped_History_Package.Instance;
+      Table_Validation_Failure_History : Table_Validation_Failure_History_Package.Instance;
+      Table_Validation_Success_History : Table_Validation_Success_History_Package.Instance;
+      -- Data product histories:
+      Validation_Status_History : Validation_Status_History_Package.Instance;
       -- Booleans to control assertion if message is dropped on async queue:
       Expect_Command_T_Send_Dropped : Boolean := False;
       Command_T_Send_Dropped_Count : Natural := 0;
-      -- Memory regions for simulation:
-      Default : Basic_Types.Byte_Array (0 .. 99) := [others => 14];
-      Working : Basic_Types.Byte_Array (0 .. 99) := [others => 14];
    end record;
    type Instance_Access is access all Instance;
 
@@ -79,7 +99,11 @@ package Component.Parameter_Manager.Implementation.Tester is
    -- Requests to update/fetch the working parameters are made on this connector.
    overriding procedure Working_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T);
    -- Requests to update/fetch the default parameters are made on this connector.
-   overriding procedure Default_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T);
+   overriding procedure Primary_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T);
+   -- Requests to update/fetch the default parameters are made on this connector.
+   overriding procedure Redundant_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T);
+   -- The destination for fetched data products to be sent to.
+   overriding procedure Data_Product_T_Recv_Sync (Self : in out Instance; Arg : in Data_Product.T);
    -- The event send connector
    overriding procedure Event_T_Recv_Sync (Self : in out Instance; Arg : in Event.T);
    -- The system time is retrieved via this connector.
@@ -97,17 +121,34 @@ package Component.Parameter_Manager.Implementation.Tester is
    -- Description:
    --    Events for the Parameter Manager component.
    -- Starting parameter table copy from source to destination.
-   overriding procedure Starting_Parameter_Table_Copy (Self : in out Instance; Arg : in Packed_Parameter_Table_Copy_Type.T);
+   overriding procedure Starting_Parameter_Table_Copy (Self : in out Instance; Arg : in Parameter_Manager_Table_Header.T);
    -- Finished parameter table copy from source to destination, without errors.
-   overriding procedure Finished_Parameter_Table_Copy (Self : in out Instance; Arg : in Packed_Parameter_Table_Copy_Type.T);
+   overriding procedure Finished_Parameter_Table_Copy (Self : in out Instance; Arg : in Parameter_Manager_Table_Header.T);
    -- A command was received with invalid parameters.
    overriding procedure Invalid_Command_Received (Self : in out Instance; Arg : in Invalid_Command_Info.T);
-   -- A timeout occurred while waiting for a parameter table copy operation to complete.
+   -- A timeout occurred while waiting for a parameter table copy operation to
+   -- complete.
    overriding procedure Parameter_Table_Copy_Timeout (Self : in out Instance);
    -- A parameter table copy failed.
    overriding procedure Parameter_Table_Copy_Failure (Self : in out Instance; Arg : in Parameters_Memory_Region_Release.T);
+   -- A parameter table copy to the working table failed.
+   overriding procedure Working_Table_Update_Failure (Self : in out Instance; Arg : in Packed_Validation_Header.T);
+   -- A parameter table copy to the primary table failed.
+   overriding procedure Primary_Table_Update_Failure (Self : in out Instance; Arg : in Packed_Validation_Header.T);
    -- A command was dropped due to a full queue.
    overriding procedure Command_Dropped (Self : in out Instance; Arg : in Command_Header.T);
+   -- A parameter table validation failed.
+   overriding procedure Table_Validation_Failure (Self : in out Instance; Arg : in Packed_Validation_Header.T);
+   -- A parameter table validation was successful.
+   overriding procedure Table_Validation_Success (Self : in out Instance; Arg : in Packed_Validation_Header.T);
+
+   -----------------------------------------------
+   -- Data product handler primitives:
+   -----------------------------------------------
+   -- Description:
+   --    Data products for the Parameter Manager component
+   -- The validation status with timestamp and last table ID/version.
+   overriding procedure Validation_Status (Self : in out Instance; Arg : in Packed_Validation.T);
 
    -----------------------------------------------
    -- Special primitives for activating component
@@ -118,8 +159,4 @@ package Component.Parameter_Manager.Implementation.Tester is
    -- Tell the component to dispatch n items off of its queue:
    not overriding function Dispatch_N (Self : in out Instance; N : in Positive := 1) return Natural;
 
-   -----------------------------------------------
-   -- Custom white-box testing functions:
-   -----------------------------------------------
-   function Get_Parameter_Bytes_Region (Self : in out Instance) return Memory_Region.T;
 end Component.Parameter_Manager.Implementation.Tester;
