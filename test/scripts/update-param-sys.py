@@ -25,10 +25,21 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
+    table_length = len(Test_Packed_Table)
+    # Version
+    #Test_Packed_Table += bytearray(struct.pack(">f", 0.0))
+    # Crc_Table
+    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
+    # Buffer_Length
+    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
+
+    #test_crc = crc_16.crc_16(Test_Packed_Table)
+    #int_crc = int.from_bytes(test_crc, 'big')
+    #print(int_crc) # Remove if CRC fully functional
 
     # Send nominal Update_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": len(Test_Packed_Table),
+          "Header.Table_Buffer_Length": table_length,
           "Header.Crc_Table": 19692,
           "Table_Buffer": list(Test_Packed_Table)
       })
@@ -40,7 +51,7 @@ if test_setup.test_setup():
     # Send test Update_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Parameter_Table_Copy_Failure,
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": len(Test_Packed_Table),
+          "Header.Table_Buffer_Length": table_length,
           "Header.Crc_Table": 0,
           "Table_Buffer": list(Test_Packed_Table)
       })
@@ -54,7 +65,7 @@ if test_setup.test_setup():
     # Send test Update_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Parameter_Table_Copy_Failure,
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": len(Test_Packed_Table) + 1,
+          "Header.Table_Buffer_Length": table_length + 1,
           "Header.Crc_Table": 19692,
           "Table_Buffer": list(Test_Packed_Table)
       })

@@ -26,6 +26,8 @@ adamant_assembly_name=${adamant_assembly_model%.assembly.yaml}
 adamant_assembly_name=${adamant_assembly_name##*/}
 adamant_assembly_dir=`dirname $adamant_assembly_model`
 cosmos_plugin_dir=`realpath $cosmos_plugin_dir`
+adamant_script_dir=`realpath $adamant_assembly_dir/../../../test/scripts`
+cosmos_script_dir=`realpath $cosmos_plugin_dir/../plugins/DEFAULT/targets_modified`
 
 # Get build directory:
 adamant_assembly_name_short=(${adamant_assembly_name//_/ })
@@ -53,5 +55,10 @@ do_copy() {
 do_copy "$adamant_assembly_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_commands.txt" $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/cmd.txt
 do_copy "$adamant_assembly_cmdtlm_dir/${adamant_assembly_name}_ccsds_cosmos_telemetry.txt" $cosmos_plugin_dir/targets/$adamant_assembly_name_upper/cmd_tlm/tlm.txt
 do_copy "$adamant_assembly_plugin_dir/plugin.txt" $cosmos_plugin_dir/plugin.txt
+do_copy "$adamant_script_dir/update-param-sys.py" $cosmos_script_dir/update-param-sys.py
+do_copy "$adamant_script_dir/validate-param-sys.py" $cosmos_script_dir/validate-param-sys.py
+do_copy "$adamant_script_dir/test_setup.py" $cosmos_script_dir/test_setup.py
+do_copy "$adamant_script_dir/crc_16.py" $cosmos_script_dir/crc_16.py
 echo "Success."
 echo "Plugin files copied to $cosmos_plugin_dir."
+echo "Script files copied to $cosmos_script_dir."
