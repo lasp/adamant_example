@@ -30,4 +30,5 @@ packets:
       - name: Cpu_Monitor_Instance.Packet_Period
       - name: Queue_Monitor_Instance.Packet_Period
       - name: Stack_Monitor_Instance.Packet_Period
+      - name: Parameter_Manager_Instance.Validation_Status
     period: "1" # create every tick

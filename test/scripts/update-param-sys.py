@@ -25,17 +25,8 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
+    # Get table length:
     table_length = len(Test_Packed_Table)
-    # Version
-    #Test_Packed_Table += bytearray(struct.pack(">f", 0.0))
-    # Crc_Table
-    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
-    # Buffer_Length
-    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
-
-    #test_crc = crc_16.crc_16(Test_Packed_Table)
-    #int_crc = int.from_bytes(test_crc, 'big')
-    #print(int_crc) # Remove if CRC fully functional
 
     # Send nominal Update_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {

@@ -25,17 +25,8 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
+    # Get table length:
     table_length = len(Test_Packed_Table)
-    # Version
-    #Test_Packed_Table += bytearray(struct.pack(">f", 0.0))
-    # Crc_Table
-    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
-    # Buffer_Length
-    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
-
-    #test_crc = crc_16.crc_16(Test_Packed_Table)
-    #int_crc = int.from_bytes(test_crc, 'big')
-    #print(int_crc) # Remove if CRC fully functional
 
     # Send nominal Validate_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
@@ -43,10 +34,11 @@ if test_setup.test_setup():
           "Header.Crc_Table": 19692,
           "Table_Buffer": list(Test_Packed_Table)
     })
-    # Check successful command count is 3 and that it was Validate_Parameter_Table:
+    # Check successful command count is 3 and that it was Validate_Parameter_Table with Status SUCCESS:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 3", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 5201", 3)
-    print("Validate_Parameter_Table success OK")
+    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'SUCCESS'", 3)
+    print("Validate_Parameter_Table SUCCESS OK")
 
     # Send test Validate_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Table_Validation_Failure, and
     # Command_Execution_Failure:
@@ -55,12 +47,13 @@ if test_setup.test_setup():
           "Header.Crc_Table": 0,
           "Table_Buffer": list(Test_Packed_Table)
     })
-    # Check last failed command count was 2 and that it was Validate_Parameter_Table with Status FAILURE:
+    # Check last failed command count was 2 and that it was Validate_Parameter_Table with Status CRC_ERROR:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 2", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201", 3)
     print("Validate_Parameter_Table failure OK")
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
-    print("Validate_Parameter_Table last Status FAILURE OK")
+    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'CRC_ERROR'", 3)
+    print("Validate_Parameter_Table last Status CRC_ERROR OK")
 
     # Send test Validate_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Table_Validation_Failure, and
     # Command_Execution_Failure:
@@ -69,12 +62,13 @@ if test_setup.test_setup():
           "Header.Crc_Table": 19692,
           "Table_Buffer": list(Test_Packed_Table)
     })
-    # Check last failed command count was 3 and that it was Validate_Parameter_Table with Status FAILURE:
+    # Check last failed command count was 3 and that it was Validate_Parameter_Table with Status LENGTH_ERROR:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 3", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201", 3)
     print("Validate_Parameter_Table failure OK")
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
-    print("Validate_Parameter_Table last Status FAILURE OK")
+    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'LENGTH_ERROR'", 3)
+    print("Validate_Parameter_Table last Status LENGTH_ERROR OK")
 
     # Send test Validate_Parameter_Table command with nominal values, and Osc_A_Freq = 999.0 to trigger the user implemented Validate_Parameters
     # function, expecting Parameter_Validation_Failed, Parameter_Table_Copy_Failure, Table_Validation_Failure, and Command_Execution_Failure
@@ -91,22 +85,18 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
+    # Get table length:
     table_length = len(Test_Packed_Table)
-    # Version
-    #Test_Packed_Table += bytearray(struct.pack(">f", 0.0))
-    # Crc_Table
-    #Test_Packed_Table += bytearray(struct.pack(">h", 0))
-    # Buffer_Length
-    #Test_Packed_Table += bytearray(struct.pack(">h", 55))
 
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
           "Header.Table_Buffer_Length": table_length,
           "Header.Crc_Table": 65043,
           "Table_Buffer": list(Test_Packed_Table)
     })
-    # Check last failed command count was 4 and that it was Validate_Parameter_Table with Status FAILURE:
+    # Check last failed command count was 4 and that it was Validate_Parameter_Table with Status PARAMETER_ERROR:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 4", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201", 3)
     print("Validate_Parameter_Table failure OK")
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
-    print("Validate_Parameter_Table last Status FAILURE OK")
+    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'PARAMETER_ERROR'", 3)
+    print("Validate_Parameter_Table last Status PARAMETER_ERROR OK")
