@@ -26,12 +26,17 @@ if test_setup.test_setup():
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
     # Get table length:
-    table_length = len(Test_Packed_Table)
+    Table_Length = len(Test_Packed_Table)
+    # Append table to Version and get CRC
+    CRC_Packed_Table = bytearray(struct.pack(">f", 0.0))
+    CRC_Packed_Table += Test_Packed_Table
+    Test_CRC = crc_16.crc_16(CRC_Packed_Table)
+    Int_CRC = int.from_bytes(Test_CRC, 'big')
 
     # Send nominal Validate_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length,
-          "Header.Crc_Table": 19692,
+          "Header.Table_Buffer_Length": Table_Length,
+          "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
     })
     # Check successful command count is 3 and that it was Validate_Parameter_Table with Status SUCCESS:
@@ -43,7 +48,7 @@ if test_setup.test_setup():
     # Send test Validate_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Table_Validation_Failure, and
     # Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length,
+          "Header.Table_Buffer_Length": Table_Length,
           "Header.Crc_Table": 0,
           "Table_Buffer": list(Test_Packed_Table)
     })
@@ -58,8 +63,8 @@ if test_setup.test_setup():
     # Send test Validate_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Table_Validation_Failure, and
     # Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length + 1,
-          "Header.Crc_Table": 19692,
+          "Header.Table_Buffer_Length": Table_Length + 1,
+          "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
     })
     # Check last failed command count was 3 and that it was Validate_Parameter_Table with Status LENGTH_ERROR:
@@ -86,11 +91,19 @@ if test_setup.test_setup():
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
     # Get table length:
-    table_length = len(Test_Packed_Table)
+    Table_Length = len(Test_Packed_Table)
+    # Version
+    CRC_Packed_Table = bytearray(struct.pack(">f", 0.0))
+    # Append rest of Test_Packed_Table
+    CRC_Packed_Table += Test_Packed_Table
+
+    Test_CRC = crc_16.crc_16(CRC_Packed_Table)
+    Int_CRC = int.from_bytes(Test_CRC, 'big')
+    print(Int_CRC) # Remove if CRC fully functional
 
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length,
-          "Header.Crc_Table": 65043,
+          "Header.Table_Buffer_Length": Table_Length,
+          "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
     })
     # Check last failed command count was 4 and that it was Validate_Parameter_Table with Status PARAMETER_ERROR:

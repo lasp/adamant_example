@@ -25,13 +25,17 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
-    # Get table length:
     table_length = len(Test_Packed_Table)
+    # Append table to Version and get CRC
+    CRC_Packed_Table = bytearray(struct.pack(">f", 0.0))
+    CRC_Packed_Table += Test_Packed_Table
+    Test_CRC = crc_16.crc_16(CRC_Packed_Table)
+    Int_CRC = int.from_bytes(Test_CRC, 'big')
 
     # Send nominal Update_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
           "Header.Table_Buffer_Length": table_length,
-          "Header.Crc_Table": 19692,
+          "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
       })
     # Check successful command count is 3 and that it was Update_Parameter_Table:
@@ -57,7 +61,7 @@ if test_setup.test_setup():
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
           "Header.Table_Buffer_Length": table_length + 1,
-          "Header.Crc_Table": 19692,
+          "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
       })
     # Check last failed command count was 3 and that it was Update_Parameter_Table with Status FAILURE:
