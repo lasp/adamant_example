@@ -154,6 +154,12 @@ $ ls /dev/tty*
 >       - "127.0.0.1:7779:7779" # Event packets
 > ```
 
+To prevent the COSMOS demo plugin from automatically installing itself each time the COSMOS containers are started, edit the environment configuration at `cosmos-project/.env` and comment out the following line:
+
+```
+# OPENC3_DEMO=1
+```
+
 Start COSMOS by running:
 
 ```
