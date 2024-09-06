@@ -70,3 +70,21 @@ if test_setup.test_setup():
     print("Update_Parameter_Table failure OK")
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
     print("Update_Parameter_Table last Status FAILURE OK")
+
+    # Send Dump_Parameters command and check against prepared parameter table:
+    cmd("Linux_Example", "Parameters_Instance-Dump_Parameters")
+    # Check successful command count is 4 and that it was Dump_Parameter_Store:
+    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 4", 3)
+    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 30", 3)
+    # Check CRC and parameter values:
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Crc_Calculated == 19692", 3)
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_A_Frequency.Value == 0.30000001192092896", 3)
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_A_Amplitude.Value == 5", 3)
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_A_Offset.Value == 2.5", 3)
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_B_Frequency.Value == 0.30000001192092896", 3)
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_B_Amplitude.Value == -5.0", 3)
+    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_B_Offset.Value == -2.5", 3)
+    print("Dump_Parameters values OK")
+    # Optionally check the hash returned by:
+    # Active_Parameters = get_tlm("Linux_Example Active_Parameters")
+    # print(Active_Parameters)
