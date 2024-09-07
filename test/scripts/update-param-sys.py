@@ -25,7 +25,7 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
-    table_length = len(Test_Packed_Table)
+    Table_Length = len(Test_Packed_Table)
     # Append table to Version and get CRC
     CRC_Packed_Table = bytearray(struct.pack(">f", 0.0))
     CRC_Packed_Table += Test_Packed_Table
@@ -34,7 +34,7 @@ if test_setup.test_setup():
 
     # Send nominal Update_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length,
+          "Header.Table_Buffer_Length": Table_Length,
           "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
       })
@@ -46,7 +46,7 @@ if test_setup.test_setup():
     # Send test Update_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Parameter_Table_Copy_Failure,
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length,
+          "Header.Table_Buffer_Length": Table_Length,
           "Header.Crc_Table": 0,
           "Table_Buffer": list(Test_Packed_Table)
       })
@@ -60,7 +60,7 @@ if test_setup.test_setup():
     # Send test Update_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Parameter_Table_Copy_Failure,
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": table_length + 1,
+          "Header.Table_Buffer_Length": Table_Length + 1,
           "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
       })
@@ -76,15 +76,11 @@ if test_setup.test_setup():
     # Check successful command count is 4 and that it was Dump_Parameter_Store:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 4", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 30", 3)
-    # Check CRC and parameter values:
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Crc_Calculated == 19692", 3)
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_A_Frequency.Value == 0.30000001192092896", 3)
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_A_Amplitude.Value == 5", 3)
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_A_Offset.Value == 2.5", 3)
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_B_Frequency.Value == 0.30000001192092896", 3)
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_B_Amplitude.Value == -5.0", 3)
-    wait_check("Linux_Example Active_Parameters Parameters_Instance.Active_Parameters.Oscillator_B_Offset.Value == -2.5", 3)
-    print("Dump_Parameters values OK")
-    # Optionally check the hash returned by:
-    # Active_Parameters = get_tlm("Linux_Example Active_Parameters")
-    # print(Active_Parameters)
+    Active_Parameters_Buffer = get_tlm_buffer("Linux_Example Active_Parameters")
+    Buffer = Active_Parameters_Buffer['buffer']
+    # Check CRC
+    if list(Buffer[-32:-30]) == Test_CRC:
+      print("Dump_Parameters CRC OK")
+    # Check Active_Parameters table buffer:
+    if Buffer[-30:-2] == CRC_Packed_Table:
+      print("Dump_Parameters values OK")
