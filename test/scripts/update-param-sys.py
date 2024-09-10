@@ -25,6 +25,7 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
+    # Get table length:
     table_length = len(Test_Packed_Table)
     # Append table to Version and get CRC
     CRC_Packed_Table = bytearray(struct.pack(">f", 0.0))
