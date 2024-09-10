@@ -99,7 +99,6 @@ if test_setup.test_setup():
 
     Test_CRC = crc_16.crc_16(CRC_Packed_Table)
     Int_CRC = int.from_bytes(Test_CRC, 'big')
-    print(Int_CRC) # Remove if CRC fully functional
 
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
           "Header.Table_Buffer_Length": Table_Length,

@@ -79,8 +79,8 @@ if test_setup.test_setup():
     Active_Parameters_Buffer = get_tlm_buffer("Linux_Example Active_Parameters")
     Buffer = Active_Parameters_Buffer['buffer']
     # Check CRC
-    if list(Buffer[-32:-30]) == Test_CRC:
+    if list(Buffer[16:18]) == Test_CRC:
       print("Dump_Parameters CRC OK")
     # Check Active_Parameters table buffer:
-    if Buffer[-30:-2] == CRC_Packed_Table:
+    if Buffer[18:46] == CRC_Packed_Table:
       print("Dump_Parameters values OK")
