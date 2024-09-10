@@ -8,24 +8,25 @@ def clear_counts():
 
 def test_setup():
     clear_counts()
+    wait(1)
 
     # Send Noop_Arg command expecting success:
     cmd("Linux_Example Command_Router_Instance-Noop_Arg with Value 1")
-    # Check successful command count is 2 and that the last success was Noop_Arg with last Value 1:
+    # Check successful command count is 3 and that the last success was Noop_Arg with last Value 1:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 3", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 3", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 3")
     print("Noop_Arg success OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Noop_Arg_Last_Value.Value == 1", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Noop_Arg_Last_Value.Value == 1")
     print("Noop_Arg last Value OK")
 
     # Send Noop command expecting failure:
     cmd("Linux_Example Command_Router_Instance-Noop_Arg with Value 868")
     # Check last failed command count was 1 and that it was Noop_Arg with last Value 1:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 1", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 3", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 3")
     print("Noop_Arg failure OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Noop_Arg_Last_Value.Value == 868", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Noop_Arg_Last_Value.Value == 868")
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'")
     print("Noop_Arg last Value failure OK")
 
     # Clear counts and data products to finish the test setup:

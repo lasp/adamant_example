@@ -41,8 +41,8 @@ if test_setup.test_setup():
     })
     # Check successful command count is 3 and that it was Validate_Parameter_Table with Status SUCCESS:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 3", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 5201", 3)
-    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'SUCCESS'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 5201")
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'SUCCESS'")
     print("Validate_Parameter_Table SUCCESS OK")
 
     # Send test Validate_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Table_Validation_Failure, and
@@ -54,10 +54,10 @@ if test_setup.test_setup():
     })
     # Check last failed command count was 1 and that it was Validate_Parameter_Table with Status CRC_ERROR:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 1", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201")
     print("Validate_Parameter_Table failure OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
-    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'CRC_ERROR'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'")
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'CRC_ERROR'")
     print("Validate_Parameter_Table last Status CRC_ERROR OK")
 
     # Send test Validate_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Table_Validation_Failure, and
@@ -69,10 +69,10 @@ if test_setup.test_setup():
     })
     # Check last failed command count was 2 and that it was Validate_Parameter_Table with Status LENGTH_ERROR:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 2", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201")
     print("Validate_Parameter_Table failure OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
-    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'LENGTH_ERROR'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'")
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'LENGTH_ERROR'")
     print("Validate_Parameter_Table last Status LENGTH_ERROR OK")
 
     # Send test Validate_Parameter_Table command with nominal values, and Osc_A_Freq = 999.0 to trigger the user implemented Validate_Parameters
@@ -99,6 +99,7 @@ if test_setup.test_setup():
 
     Test_CRC = crc_16.crc_16(CRC_Packed_Table)
     Int_CRC = int.from_bytes(Test_CRC, 'big')
+    print(Int_CRC) # Remove if CRC fully functional
 
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
           "Header.Table_Buffer_Length": Table_Length,
@@ -107,8 +108,8 @@ if test_setup.test_setup():
     })
     # Check last failed command count was 3 and that it was Validate_Parameter_Table with Status PARAMETER_ERROR:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 3", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5201")
     print("Validate_Parameter_Table failure OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
-    wait_check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'PARAMETER_ERROR'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'")
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'PARAMETER_ERROR'")
     print("Validate_Parameter_Table last Status PARAMETER_ERROR OK")

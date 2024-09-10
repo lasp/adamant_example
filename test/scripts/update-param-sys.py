@@ -40,7 +40,7 @@ if test_setup.test_setup():
       })
     # Check successful command count is 3 and that it was Update_Parameter_Table:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 3", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 5200", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 5200")
     print("Update_Parameter_Table success OK")
 
     # Send test Update_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Parameter_Table_Copy_Failure,
@@ -52,9 +52,9 @@ if test_setup.test_setup():
       })
     # Check last failed command count was 1 and that it was Update_Parameter_Table with Status FAILURE:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 1", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5200", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5200")
     print("Update_Parameter_Table failure OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'")
     print("Update_Parameter_Table last Status FAILURE OK")
 
     # Send test Update_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Parameter_Table_Copy_Failure,
@@ -66,16 +66,16 @@ if test_setup.test_setup():
       })
     # Check last failed command count was 2 and that it was Update_Parameter_Table with Status FAILURE:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 2", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5200", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5200")
     print("Update_Parameter_Table failure OK")
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'")
     print("Update_Parameter_Table last Status FAILURE OK")
 
     # Send Dump_Parameters command and check against prepared parameter table:
     cmd("Linux_Example", "Parameters_Instance-Dump_Parameters")
     # Check successful command count is 4 and that it was Dump_Parameter_Store:
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Success_Count.Value == 4", 3)
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 30", 3)
+    check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Successful_Command.Id == 30")
     Active_Parameters_Buffer = get_tlm_buffer("Linux_Example Active_Parameters")
     Buffer = Active_Parameters_Buffer['buffer']
     # Check CRC
