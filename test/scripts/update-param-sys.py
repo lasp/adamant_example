@@ -25,7 +25,7 @@ if test_setup.test_setup():
     Test_Packed_Table += bytearray(struct.pack(">f", -5.00))
     # Osc_B_Off
     Test_Packed_Table += bytearray(struct.pack(">f", -2.50))
-    Table_Length = len(Test_Packed_Table)
+    table_length = len(Test_Packed_Table)
     # Append table to Version and get CRC
     CRC_Packed_Table = bytearray(struct.pack(">f", 0.0))
     CRC_Packed_Table += Test_Packed_Table
@@ -34,7 +34,7 @@ if test_setup.test_setup():
 
     # Send nominal Update_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": Table_Length,
+          "Header.Table_Buffer_Length": table_length,
           "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
       })
@@ -46,12 +46,12 @@ if test_setup.test_setup():
     # Send test Update_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Parameter_Table_Copy_Failure,
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": Table_Length,
+          "Header.Table_Buffer_Length": table_length,
           "Header.Crc_Table": 0,
           "Table_Buffer": list(Test_Packed_Table)
       })
-    # Check last failed command count was 2 and that it was Update_Parameter_Table with Status FAILURE:
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 2", 3)
+    # Check last failed command count was 1 and that it was Update_Parameter_Table with Status FAILURE:
+    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 1", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5200", 3)
     print("Update_Parameter_Table failure OK")
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
@@ -60,12 +60,12 @@ if test_setup.test_setup():
     # Send test Update_Parameter_Table command with bad length expecting Memory_Region_Length_Mismatch, Parameter_Table_Copy_Failure,
     # Working_Table_Update_Failure, and Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Update_Parameter_Table", {
-          "Header.Table_Buffer_Length": Table_Length + 1,
+          "Header.Table_Buffer_Length": table_length + 1,
           "Header.Crc_Table": Int_CRC,
           "Table_Buffer": list(Test_Packed_Table)
       })
-    # Check last failed command count was 3 and that it was Update_Parameter_Table with Status FAILURE:
-    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 3", 3)
+    # Check last failed command count was 2 and that it was Update_Parameter_Table with Status FAILURE:
+    wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Command_Failure_Count.Value == 2", 3)
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.ID == 5200", 3)
     print("Update_Parameter_Table failure OK")
     wait_check("Linux_Example Software_Status_Packet Command_Router_Instance.Last_Failed_Command.Status == 'FAILURE'", 3)
