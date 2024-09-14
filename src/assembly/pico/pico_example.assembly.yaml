@@ -132,6 +132,8 @@ components:
     priority: 1
     stack_size: 2000
     secondary_stack_size: 100
+    init:
+      - "Interpacket_Gap_Ms => 0"
     init_base:
       - "Queue_Size => 4 * Ccsds_Space_Packet.Size_In_Bytes"
     subtasks:
