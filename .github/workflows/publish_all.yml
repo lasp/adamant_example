@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 jobs:
   compile_job:
-    name: test_all
+    name: publish_all
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/lasp/adamant_example:latest

@@ -35,7 +35,7 @@ jobs:
         with:
           name: pico_elf
           path: |
-            adamant_example/src/assembly/pico/main/build/bin/Pico/main.elf
-            adamant_example/src/assembly/pico/main/build/bin/Pico/main.uf2
+            ${{ github.workspace }}/adamant_example/src/assembly/pico/main/build/bin/Pico/main.elf
+            ${{ github.workspace }}/adamant_example/src/assembly/pico/main/build/bin/Pico/main.uf2
           if-no-files-found: error
       - run: echo "Finished with status - ${{ job.status }}."
