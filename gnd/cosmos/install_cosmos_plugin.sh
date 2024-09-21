@@ -59,12 +59,12 @@ do_copy "$adamant_assembly_plugin_dir/plugin.txt" $cosmos_plugin_dir/plugin.txt
 do_copy "$adamant_script_dir/update-param-sys.py" $cosmos_script_dir/update-param-sys.py
 do_copy "$adamant_script_dir/validate-param-sys.py" $cosmos_script_dir/validate-param-sys.py
 do_copy "$adamant_script_dir/test_setup.py" $cosmos_script_dir/test_setup.py
-do_copy "$adamant_script_dir/crc_16.py" $cosmos_script_dir/crc_16.py
 do_copy "$adamant_assembly_dir/build/py/${adamant_assembly_name}_parameter_table_record.py" $cosmos_script_dir/${adamant_assembly_name}_parameter_table_record.py
 mkdir -p $cosmos_script_dir/base_classes
 do_copy "$adamant_dir/src/types/parameter/build/py/parameter_table_header.py" $cosmos_script_dir/parameter_table_header.py
 do_copy "$adamant_dir/src/types/packed_types/build/py/packed_f32.py" $cosmos_script_dir/packed_f32.py
 do_copy "$adamant_dir/gnd/base_classes/packed_type_base.py" $cosmos_script_dir/base_classes/packed_type_base.py
+do_copy "$adamant_dir/gnd/util/crc_16.py" $cosmos_script_dir/crc_16.py
 echo "Success."
 echo "Plugin files copied to $cosmos_plugin_dir."
 echo "Script files copied to $cosmos_script_dir."
