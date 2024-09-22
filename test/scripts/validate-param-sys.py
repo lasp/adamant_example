@@ -25,13 +25,14 @@ if test_setup.test_setup():
         Oscillator_B_Offset=Table_Record.Packed_F32(-2.50)
     )
     record_byte_array = record._to_byte_array().tobytes()
+    record.Crc_Calculated = int.from_bytes(crc_16.crc_16(record_byte_array[4:]))
+    record.Header.Crc_Table = record.Crc_Calculated
     record_len = len(record_byte_array[8:])
-    record_crc = int.from_bytes(crc_16.crc_16(record_byte_array[4:]), 'big')
 
     # Send nominal Validate_Parameter_Table command expecting success:
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
           "Header.Table_Buffer_Length": record_len,
-          "Header.Crc_Table": record_crc,
+          "Header.Crc_Table": record.Crc_Calculated,
           "Table_Buffer": list(record_byte_array[8:])
     })
     # Check successful command count is 3 and that it was Validate_Parameter_Table with Status SUCCESS:
@@ -40,7 +41,7 @@ if test_setup.test_setup():
     #  Check Last_Validation_Version, Crc_Table, and Last_Validation_Status:
     check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'SUCCESS'")
     check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Version == 0.00")
-    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Crc_Table == " + str(record_crc))
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Crc_Table == " + str(record.Crc_Calculated))
     print("Validate_Parameter_Table SUCCESS OK")
 
     # Send test Validate_Parameter_Table command with bad CRC expecting Memory_Region_Crc_Invalid, Table_Validation_Failure, and
@@ -65,7 +66,7 @@ if test_setup.test_setup():
     # Command_Execution_Failure:
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
           "Header.Table_Buffer_Length": record_len + 1,
-          "Header.Crc_Table": record_crc,
+          "Header.Crc_Table": record.Crc_Calculated,
           "Table_Buffer": list(record_byte_array[8:])
     })
     # Check last failed command count was 2 and that it was Validate_Parameter_Table with Status LENGTH_ERROR:
@@ -76,7 +77,7 @@ if test_setup.test_setup():
     #  Check Last_Validation_Version, Crc_Table, and Last_Validation_Status:
     check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'LENGTH_ERROR'")
     check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Version == 0.00")
-    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Crc_Table == " + str(record_crc))
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Crc_Table == " + str(record.Crc_Calculated))
     print("Validate_Parameter_Table last Status LENGTH_ERROR OK")
 
     # Send test Validate_Parameter_Table command with nominal values, and Osc_A_Freq = 999.0 to trigger the user implemented Validate_Parameters
@@ -94,12 +95,13 @@ if test_setup.test_setup():
         Oscillator_B_Offset=Table_Record.Packed_F32(-2.50)
     )
     record_byte_array = record._to_byte_array().tobytes()
+    record.Crc_Calculated = int.from_bytes(crc_16.crc_16(record_byte_array[4:]))
+    record.Header.Crc_Table = record.Crc_Calculated
     record_len = len(record_byte_array[8:])
-    record_crc = int.from_bytes(crc_16.crc_16(record_byte_array[4:]), 'big')
 
     cmd("Linux_Example", "Parameter_Manager_Instance-Validate_Parameter_Table", {
           "Header.Table_Buffer_Length": record_len,
-          "Header.Crc_Table": record_crc,
+          "Header.Crc_Table": record.Crc_Calculated,
           "Table_Buffer": list(record_byte_array[8:])
     })
     # Check last failed command count was 3 and that it was Validate_Parameter_Table with Status PARAMETER_ERROR:
@@ -110,5 +112,5 @@ if test_setup.test_setup():
     #  Check Last_Validation_Version, Crc_Table, and Last_Validation_Status:
     check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Status == 'PARAMETER_ERROR'")
     check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Last_Validation_Version == 0.00")
-    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Crc_Table == " + str(record_crc))
+    check("Linux_Example Software_Status_Packet Parameter_Manager_Instance.Validation_Status.Crc_Table == " + str(record.Crc_Calculated))
     print("Validate_Parameter_Table last Status PARAMETER_ERROR OK")
