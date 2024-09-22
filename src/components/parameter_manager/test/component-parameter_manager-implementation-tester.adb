@@ -2,8 +2,8 @@
 -- Parameter_Manager Component Tester Body
 --------------------------------------------------------------------------------
 
+-- Includes:
 with String_Util;
-with Parameter_Enums;
 
 package body Component.Parameter_Manager.Implementation.Tester is
 
@@ -19,7 +19,9 @@ package body Component.Parameter_Manager.Implementation.Tester is
       -- Connector histories:
       Self.Command_Response_T_Recv_Sync_History.Init (Depth => 100);
       Self.Working_Parameters_Memory_Region_Recv_Sync_History.Init (Depth => 100);
-      Self.Default_Parameters_Memory_Region_Recv_Sync_History.Init (Depth => 100);
+      Self.Primary_Parameters_Memory_Region_Recv_Sync_History.Init (Depth => 100);
+      Self.Redundant_Parameters_Memory_Region_Recv_Sync_History.Init (Depth => 100);
+      Self.Data_Product_T_Recv_Sync_History.Init (Depth => 100);
       Self.Event_T_Recv_Sync_History.Init (Depth => 100);
       Self.Sys_Time_T_Return_History.Init (Depth => 100);
       -- Event histories:
@@ -28,7 +30,13 @@ package body Component.Parameter_Manager.Implementation.Tester is
       Self.Invalid_Command_Received_History.Init (Depth => 100);
       Self.Parameter_Table_Copy_Timeout_History.Init (Depth => 100);
       Self.Parameter_Table_Copy_Failure_History.Init (Depth => 100);
+      Self.Working_Table_Update_Failure_History.Init (Depth => 100);
+      Self.Primary_Table_Update_Failure_History.Init (Depth => 100);
       Self.Command_Dropped_History.Init (Depth => 100);
+      Self.Table_Validation_Failure_History.Init (Depth => 100);
+      Self.Table_Validation_Success_History.Init (Depth => 100);
+      -- Data product histories:
+      Self.Validation_Status_History.Init (Depth => 100);
    end Init_Base;
 
    procedure Final_Base (Self : in out Instance) is
@@ -37,7 +45,9 @@ package body Component.Parameter_Manager.Implementation.Tester is
       -- Connector histories:
       Self.Command_Response_T_Recv_Sync_History.Destroy;
       Self.Working_Parameters_Memory_Region_Recv_Sync_History.Destroy;
-      Self.Default_Parameters_Memory_Region_Recv_Sync_History.Destroy;
+      Self.Primary_Parameters_Memory_Region_Recv_Sync_History.Destroy;
+      Self.Redundant_Parameters_Memory_Region_Recv_Sync_History.Destroy;
+      Self.Data_Product_T_Recv_Sync_History.Destroy;
       Self.Event_T_Recv_Sync_History.Destroy;
       Self.Sys_Time_T_Return_History.Destroy;
       -- Event histories:
@@ -46,7 +56,13 @@ package body Component.Parameter_Manager.Implementation.Tester is
       Self.Invalid_Command_Received_History.Destroy;
       Self.Parameter_Table_Copy_Timeout_History.Destroy;
       Self.Parameter_Table_Copy_Failure_History.Destroy;
+      Self.Working_Table_Update_Failure_History.Destroy;
+      Self.Primary_Table_Update_Failure_History.Destroy;
       Self.Command_Dropped_History.Destroy;
+      Self.Table_Validation_Failure_History.Destroy;
+      Self.Table_Validation_Success_History.Destroy;
+      -- Data product histories:
+      Self.Validation_Status_History.Destroy;
 
       -- Destroy component heap:
       Self.Component_Instance.Final_Base;
@@ -59,7 +75,9 @@ package body Component.Parameter_Manager.Implementation.Tester is
    begin
       Self.Component_Instance.Attach_Command_Response_T_Send (To_Component => Self'Unchecked_Access, Hook => Self.Command_Response_T_Recv_Sync_Access);
       Self.Component_Instance.Attach_Working_Parameters_Memory_Region_Send (To_Component => Self'Unchecked_Access, Hook => Self.Working_Parameters_Memory_Region_Recv_Sync_Access);
-      Self.Component_Instance.Attach_Default_Parameters_Memory_Region_Send (To_Component => Self'Unchecked_Access, Hook => Self.Default_Parameters_Memory_Region_Recv_Sync_Access);
+      Self.Component_Instance.Attach_Primary_Parameters_Memory_Region_Send (To_Component => Self'Unchecked_Access, Hook => Self.Primary_Parameters_Memory_Region_Recv_Sync_Access);
+      Self.Component_Instance.Attach_Redundant_Parameters_Memory_Region_Send (To_Component => Self'Unchecked_Access, Hook => Self.Redundant_Parameters_Memory_Region_Recv_Sync_Access);
+      Self.Component_Instance.Attach_Data_Product_T_Send (To_Component => Self'Unchecked_Access, Hook => Self.Data_Product_T_Recv_Sync_Access);
       Self.Component_Instance.Attach_Event_T_Send (To_Component => Self'Unchecked_Access, Hook => Self.Event_T_Recv_Sync_Access);
       Self.Component_Instance.Attach_Sys_Time_T_Get (To_Component => Self'Unchecked_Access, Hook => Self.Sys_Time_T_Return_Access);
       Self.Attach_Timeout_Tick_Send (To_Component => Self.Component_Instance'Unchecked_Access, Hook => Self.Component_Instance.Timeout_Tick_Recv_Sync_Access);
@@ -79,39 +97,33 @@ package body Component.Parameter_Manager.Implementation.Tester is
 
    -- Requests to update/fetch the working parameters are made on this connector.
    overriding procedure Working_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T) is
-      use Parameter_Enums.Parameter_Table_Operation_Type;
    begin
-      -- If it is a get then fill in the data:
-      if Arg.Operation = Get then
-         declare
-            subtype Safe_Byte_Array_Type is Basic_Types.Byte_Array (0 .. Arg.Region.Length - 1);
-            Safe_Byte_Array : Safe_Byte_Array_Type with Import, Convention => Ada, Address => Arg.Region.Address;
-         begin
-            Safe_Byte_Array := Self.Working;
-         end;
-      end if;
-
       -- Push the argument onto the test history for looking at later:
       Self.Working_Parameters_Memory_Region_Recv_Sync_History.Push (Arg);
    end Working_Parameters_Memory_Region_Recv_Sync;
 
    -- Requests to update/fetch the default parameters are made on this connector.
-   overriding procedure Default_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T) is
-      use Parameter_Enums.Parameter_Table_Operation_Type;
+   overriding procedure Primary_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T) is
    begin
-      -- If it is a get then fill in the data:
-      if Arg.Operation = Get then
-         declare
-            subtype Safe_Byte_Array_Type is Basic_Types.Byte_Array (0 .. Arg.Region.Length - 1);
-            Safe_Byte_Array : Safe_Byte_Array_Type with Import, Convention => Ada, Address => Arg.Region.Address;
-         begin
-            Safe_Byte_Array := Self.Default;
-         end;
-      end if;
-
       -- Push the argument onto the test history for looking at later:
-      Self.Default_Parameters_Memory_Region_Recv_Sync_History.Push (Arg);
-   end Default_Parameters_Memory_Region_Recv_Sync;
+      Self.Primary_Parameters_Memory_Region_Recv_Sync_History.Push (Arg);
+   end Primary_Parameters_Memory_Region_Recv_Sync;
+
+   -- Requests to update/fetch the default parameters are made on this connector.
+   overriding procedure Redundant_Parameters_Memory_Region_Recv_Sync (Self : in out Instance; Arg : in Parameters_Memory_Region.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Redundant_Parameters_Memory_Region_Recv_Sync_History.Push (Arg);
+   end Redundant_Parameters_Memory_Region_Recv_Sync;
+
+   -- The destination for fetched data products to be sent to.
+   overriding procedure Data_Product_T_Recv_Sync (Self : in out Instance; Arg : in Data_Product.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Data_Product_T_Recv_Sync_History.Push (Arg);
+      -- Dispatch the data product to the correct handler:
+      Self.Dispatch_Data_Product (Arg);
+   end Data_Product_T_Recv_Sync;
 
    -- The event send connector
    overriding procedure Event_T_Recv_Sync (Self : in out Instance; Arg : in Event.T) is
@@ -153,14 +165,14 @@ package body Component.Parameter_Manager.Implementation.Tester is
    -- Description:
    --    Events for the Parameter Manager component.
    -- Starting parameter table copy from source to destination.
-   overriding procedure Starting_Parameter_Table_Copy (Self : in out Instance; Arg : in Packed_Parameter_Table_Copy_Type.T) is
+   overriding procedure Starting_Parameter_Table_Copy (Self : in out Instance; Arg : in Parameter_Manager_Table_Header.T) is
    begin
       -- Push the argument onto the test history for looking at later:
       Self.Starting_Parameter_Table_Copy_History.Push (Arg);
    end Starting_Parameter_Table_Copy;
 
    -- Finished parameter table copy from source to destination, without errors.
-   overriding procedure Finished_Parameter_Table_Copy (Self : in out Instance; Arg : in Packed_Parameter_Table_Copy_Type.T) is
+   overriding procedure Finished_Parameter_Table_Copy (Self : in out Instance; Arg : in Parameter_Manager_Table_Header.T) is
    begin
       -- Push the argument onto the test history for looking at later:
       Self.Finished_Parameter_Table_Copy_History.Push (Arg);
@@ -173,7 +185,8 @@ package body Component.Parameter_Manager.Implementation.Tester is
       Self.Invalid_Command_Received_History.Push (Arg);
    end Invalid_Command_Received;
 
-   -- A timeout occurred while waiting for a parameter table copy operation to complete.
+   -- A timeout occurred while waiting for a parameter table copy operation to
+   -- complete.
    overriding procedure Parameter_Table_Copy_Timeout (Self : in out Instance) is
       Arg : constant Natural := 0;
    begin
@@ -188,12 +201,52 @@ package body Component.Parameter_Manager.Implementation.Tester is
       Self.Parameter_Table_Copy_Failure_History.Push (Arg);
    end Parameter_Table_Copy_Failure;
 
+   -- A parameter table copy to the working table failed.
+   overriding procedure Working_Table_Update_Failure (Self : in out Instance; Arg : in Packed_Validation_Header.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Working_Table_Update_Failure_History.Push (Arg);
+   end Working_Table_Update_Failure;
+
+   -- A parameter table copy to the primary table failed.
+   overriding procedure Primary_Table_Update_Failure (Self : in out Instance; Arg : in Packed_Validation_Header.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Primary_Table_Update_Failure_History.Push (Arg);
+   end Primary_Table_Update_Failure;
+
    -- A command was dropped due to a full queue.
    overriding procedure Command_Dropped (Self : in out Instance; Arg : in Command_Header.T) is
    begin
       -- Push the argument onto the test history for looking at later:
       Self.Command_Dropped_History.Push (Arg);
    end Command_Dropped;
+
+   -- A parameter table validation failed.
+   overriding procedure Table_Validation_Failure (Self : in out Instance; Arg : in Packed_Validation_Header.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Table_Validation_Failure_History.Push (Arg);
+   end Table_Validation_Failure;
+
+   -- A parameter table validation was successful.
+   overriding procedure Table_Validation_Success (Self : in out Instance; Arg : in Packed_Validation_Header.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Table_Validation_Success_History.Push (Arg);
+   end Table_Validation_Success;
+
+   -----------------------------------------------
+   -- Data product handler primitive:
+   -----------------------------------------------
+   -- Description:
+   --    Data products for the Parameter Manager component
+   -- The validation status with timestamp and last table ID/version.
+   overriding procedure Validation_Status (Self : in out Instance; Arg : in Packed_Validation.T) is
+   begin
+      -- Push the argument onto the test history for looking at later:
+      Self.Validation_Status_History.Push (Arg);
+   end Validation_Status;
 
    -----------------------------------------------
    -- Special primitives for activating component
@@ -217,13 +270,5 @@ package body Component.Parameter_Manager.Implementation.Tester is
       Self.Log ("    Dispatched " & String_Util.Trim_Both (Natural'Image (Num_Dispatched)) & " items from queue.");
       return Num_Dispatched;
    end Dispatch_N;
-
-   -----------------------------------------------
-   -- Custom white-box testing functions:
-   -----------------------------------------------
-   function Get_Parameter_Bytes_Region (Self : in out Instance) return Memory_Region.T is
-   begin
-      return Self.Component_Instance.Parameter_Bytes_Region;
-   end Get_Parameter_Bytes_Region;
 
 end Component.Parameter_Manager.Implementation.Tester;

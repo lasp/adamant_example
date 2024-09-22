@@ -183,7 +183,6 @@ components:
     set_id_bases:
       - "Command_Id_Base => 5200"
     init:
-      - "Parameter_Table_Length => Linux_Example_Parameter_Table.Parameter_Table_Size_In_Bytes"
       - "Ticks_Until_Timeout => 3"
 ########################################
 # Telemetry system:
@@ -1070,9 +1069,17 @@ connections:
     to_component: Parameters_Instance
     to_connector: Parameters_Memory_Region_T_Recv_Async
   - from_component: Parameter_Manager_Instance
-    from_connector: Default_Parameters_Memory_Region_Send
+    from_connector: Primary_Parameters_Memory_Region_Send
     to_component: Parameter_Store_Instance
     to_connector: Parameters_Memory_Region_T_Recv_Async
+  - from_component: Parameter_Manager_Instance
+    from_connector: Redundant_Parameters_Memory_Region_Send
+    to_component: Parameter_Store_Instance
+    to_connector: Parameters_Memory_Region_T_Recv_Async
+  - from_component: Parameter_Manager_Instance
+    from_connector: Data_Product_T_Send
+    to_component: Product_Database_Instance
+    to_connector: Data_Product_T_Recv_Sync
   - from_component: Parameter_Store_Instance
     from_connector: Parameters_Memory_Region_Release_T_Send
     to_component: Parameter_Manager_Instance

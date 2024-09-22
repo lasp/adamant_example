@@ -1,0 +1,10 @@
+---
+description: A packed record which holds the most recently validated parameter table header with its validation status.
+fields:
+  - name: Last_Validation_Header
+    description: The header of the most recently validated parameter table.
+    type: Parameter_Manager_Table_Header.T
+  - name: Last_Validation_Status
+    description: The status of the most recent table validation operation.
+    type: Parameter_Enums.Parameter_Table_Update_Status.E
+    format: E8

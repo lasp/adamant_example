@@ -1,6 +1,9 @@
 ---
 description: These are the commands for the Parameter Manager component.
 commands:
-  - name: Copy_Parameter_Table
-    description: Copy parameter table from source to destination based on the enumeration provided.
-    arg_type: Packed_Parameter_Table_Copy_Type.T
+  - name: Update_Parameter_Table
+    description: Send received parameter table to default and working regions.
+    arg_type: Packed_Parameter_Table.T
+  - name: Validate_Parameter_Table
+    description: Validate a received parameter table.
+    arg_type: Packed_Parameter_Table.T
