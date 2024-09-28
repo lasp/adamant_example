@@ -60,7 +60,7 @@ begin
       --delay 0.2;
 
       -- Next release time
-      Release := Release + Period;
+      Release := @ + Period;
       Send_Hello;
       -- RP.Device.Timer.Delay_Milliseconds (250);
    end loop;
