@@ -19,7 +19,7 @@ package body Component.Counter.Implementation is
       Ignore_2 := Self.Dispatch_All;
 
       -- Increment the count and perform the counter action:
-      Self.The_Count := Self.The_Count + 1;
+      Self.The_Count := @ + 1;
       Counter_Action.Do_Action (Self.The_Count);
 
       -- Send the count value out:

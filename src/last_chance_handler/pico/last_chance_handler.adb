@@ -50,7 +50,7 @@ package body Last_Chance_Handler is
             Packed_Exception_Data.Exception_Name (Copy_Idx) := Char_To_Byte (Char);
 
             -- Don't overflow.
-            Copy_Idx := Copy_Idx + 1;
+            Copy_Idx := @ + 1;
             if Copy_Idx > Packed_Exception_Data.Exception_Name'Last then
                exit;
             end if;
@@ -66,7 +66,7 @@ package body Last_Chance_Handler is
             Packed_Exception_Data.Exception_Message (Copy_Idx) := Char_To_Byte (Char);
 
             -- Don't overflow.
-            Copy_Idx := Copy_Idx + 1;
+            Copy_Idx := @ + 1;
             if Copy_Idx > Packed_Exception_Data.Exception_Message'Last then
                exit;
             end if;
@@ -196,7 +196,7 @@ package body Last_Chance_Handler is
                   Pico_Uart.Send_Byte_Array (Component.Ccsds_Serial_Interface.Implementation.Sync_Pattern & Pkt_Bytes);
 
                   -- Increment sequence count:
-                  Cnt := Cnt + 1;
+                  Cnt := @ + 1;
                end loop;
             end;
          end;
