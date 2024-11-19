@@ -26,8 +26,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           set-safe-directory: true
-          repository: lasp/adamant
+          repository: dinkelk/adamant
           path: adamant
+          ref: generic-circ-dep
       - name: Check all style
         run: bash adamant_example/env/github_run.sh "redo adamant_example/style_all"
       - name: Archive logs for failed style checks

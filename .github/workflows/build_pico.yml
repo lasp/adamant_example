@@ -26,8 +26,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           set-safe-directory: true
-          repository: lasp/adamant
+          repository: dinkelk/adamant
           path: adamant
+          ref: generic-circ-dep
       - name: Build the Pico binary
         run: bash adamant_example/env/github_run.sh "redo adamant_example/src/assembly/pico/main/build/bin/Pico/main.uf2"
       - name: Archive Pico binary

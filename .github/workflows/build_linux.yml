@@ -26,8 +26,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           set-safe-directory: true
-          repository: lasp/adamant
+          repository: dinkelk/adamant
           path: adamant
+          ref: generic-circ-dep
       - name: Build the Linux binary
         run: bash adamant_example/env/github_run.sh "redo adamant_example/src/assembly/linux/main/build/bin/Linux/main.elf"
       - name: Archive Linux binary
