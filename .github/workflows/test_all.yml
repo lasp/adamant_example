@@ -1,4 +1,4 @@
-name: Run All Unit Tests
+name: Run All Unit Tests with Coverage
 on:
   push:
     branches:
@@ -28,8 +28,8 @@ jobs:
           set-safe-directory: true
           repository: lasp/adamant
           path: adamant
-      - name: Run all unit tests
-        run: bash adamant_example/env/github_run.sh "redo adamant_example/test_all"
+      - name: Run all unit tests and coverage
+        run: bash adamant_example/env/github_run.sh "redo adamant_example/coverage_all"
       - name: Archive logs for failed unit tests
         if: always()
         uses: actions/upload-artifact@v4
