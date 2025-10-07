@@ -4,7 +4,11 @@ services:
         image: ghcr.io/lasp/adamant_example:0.1
         build:
             context: .
-        platform: linux/amd64
+            dockerfile: Dockerfile
+            x-bake:
+                platforms:
+                    - linux/amd64
+                    - linux/arm64
         container_name: adamant_example_container
         volumes:
             - type: bind
