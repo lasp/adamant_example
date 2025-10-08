@@ -4,7 +4,7 @@
 # For best results use the ./adamant_env.sh script with the `build` and `start` arguments
 # provided in this directory.
 #
-FROM ghcr.io/lasp/adamant:latest as adamant_base
+FROM ghcr.io/lasp/adamant:0.1 AS adamant_base
 USER root
 
 # Install elf2uf2
@@ -24,7 +24,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -yq make cmake automake autoconf build-essential texinfo libtool libftdi-dev libusb-1.0-0-dev gcc-arm-none-eabi gcc g++ libstdc++-arm-none-eabi-newlib \
     && mkdir -p /root/pico \
     && cd /root/pico \
-    && git clone -b master https://github.com/raspberrypi/pico-sdk.git \
+    && git clone --branch 1.5.1 --depth 1 --single-branch https://github.com/raspberrypi/pico-sdk.git \
     && cd /root/pico/pico-sdk/tools/elf2uf2 \
     && mkdir build \
     && cd build \
