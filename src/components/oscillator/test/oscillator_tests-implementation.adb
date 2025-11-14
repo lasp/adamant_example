@@ -79,7 +79,12 @@ package body Oscillator_Tests.Implementation is
          Parameter_Update_Status_Assert.Eq (T.Fetch_Parameter (T.Parameters.Get_Frequency_Id, Param), Success);
          Parameter_Assert.Eq (Param, Param_Frequency);
       end Check_Frequency;
-      Test_Param_Update : Parameter_Update.T;
+      Test_Param_Update : Parameter_Update.T := (
+         Table_Id => 1,
+         Operation => Parameter_Enums.Parameter_Operation_Type.Update,
+         Status => Success,
+         Param => ((0, 0), [others => 0])
+      );
    begin
       -- Validate the frequency:
       Test_Param_Update.Operation := Parameter_Enums.Parameter_Operation_Type.Validate;
@@ -90,8 +95,8 @@ package body Oscillator_Tests.Implementation is
 
       -- Send a tick:
       Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
-      -- Make sure staged frequency parameter changed:
-      Check_Frequency (5.1);
+      -- Fetch should return the active parameter, since we haven't sent update.
+      Check_Frequency (0.175);
       -- Make sure working frequency parameter hasn't changed from default:
       Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 0.175));
 
@@ -100,10 +105,15 @@ package body Oscillator_Tests.Implementation is
       T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
       -- Check status:
       Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Success);
+      -- Fetch should return the staged parameter, since we have sent update.
+      Check_Frequency (5.1);
+      -- Make sure working frequency parameter still hasn't changed from default:
+      Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 0.175));
       -- Send a tick to update parameters:
       Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
       -- Make sure frequency parameter changed:
       Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 5.1));
+      Check_Frequency (5.1);
 
       -- Set to an invalid value (arbitrarily forced 999.0 invalid in implementation)
       -- Validate a parameter:
@@ -112,11 +122,13 @@ package body Oscillator_Tests.Implementation is
       Parameter_Update_Status_Assert.Eq (T.Stage_Parameter (T.Parameters.Frequency ((Value => 999.0))), Success);
       T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
       Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Validation_Error);
+      -- Fetch should return the working parameter.
+      Check_Frequency (5.1);
 
       -- Send a tick:
       Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
-      -- Make sure staged frequency parameter changed:
-      Check_Frequency (999.0);
+      -- Fetch should return the working parameter.
+      Check_Frequency (5.1);
       -- Make sure working frequency parameter hasn't changed:
       Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 5.1));
 
@@ -125,11 +137,14 @@ package body Oscillator_Tests.Implementation is
       T.Component_Instance.Parameter_Update_T_Modify (Test_Param_Update);
       -- Check status:
       Parameter_Update_Status_Assert.Eq (Test_Param_Update.Status, Success);
+      -- Fetch should return the staged parameter.
+      Check_Frequency (999.0);
       -- Send a tick to update parameters:
       Self.Tester.Tick_T_Send ((Time => (0, 0), Count => 0));
       -- Make sure frequency parameter changed:
       Packed_F32_Assert.Eq (T.Get_Component_Frequency, (Value => 999.0));
-
+      -- Fetch should return the working parameter.
+      Check_Frequency (999.0);
    end Test_Parameter_Validation;
 
 end Oscillator_Tests.Implementation;
