@@ -162,6 +162,7 @@ components:
       - "Parameter_Update_T_Provide_Count => 2"
     init:
       - "Parameter_Table_Entries => Linux_Example_Parameter_Table.Parameter_Table_Entries'Access"
+      - "Table_Id => Linux_Example_Parameter_Table.Parameter_Table_Id"
       - "Dump_Parameters_On_Change => True"
   - type: Parameter_Store
     description: This component manages the default parameter table, storing it on the heap. In an embedded system the default parameter table will usually be instantiated in non-volatile memory, so that it can be restored after reset.
