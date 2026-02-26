@@ -53,4 +53,8 @@ fi
 # Signify the environment it set up:
 export EXAMPLE_ENVIRONMENT_SET="yes"
 
+# Save environment snapshot for fast re-activation by automated tools.
+# Stored in /tmp so it is automatically invalidated on container restart.
+export -p > /tmp/.adamant_example_env_snapshot
+
 echo "Done."

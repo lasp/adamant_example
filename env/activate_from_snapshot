@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Fast activation for automated tools.
+# Thin wrapper around the core activate_from_snapshot in adamant.
+# See adamant/env/activate_from_snapshot for details.
+
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export ADAMANT_DIR="${ADAMANT_DIR:-$(readlink -f "$_SCRIPT_DIR/../../adamant")}"
+unset _SCRIPT_DIR
+
+. "$ADAMANT_DIR/env/activate_from_snapshot" \
+    "/tmp/.adamant_example_env_snapshot" \
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/activate" \
+    "EXAMPLE_ENVIRONMENT_SET"
