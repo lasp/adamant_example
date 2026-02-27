@@ -15,8 +15,8 @@ package body Component.Parameter_Manager.Implementation is
    -- Initialization parameters for the Parameter Manager.
    --
    -- Init Parameters:
-   -- parameter_Table_Length : Natural - The size of the parameter table in bytes. This must be known to the component so it can construct correct sized memory regions for the downstream components.
-   -- ticks_Until_Timeout : Natural - The component will wait until it has received at least this many ticks before reporting a timeout error while waiting for a parameter update/fetch response from either the active or default parameter components. For example, if the component is attached to a 10Hz rate group and this value is set to 7, then the component will wait between 700 and 800 ms before declaring a timeout error from an unresponsive downstream component.
+   -- Parameter_Table_Length : Natural - The size of the parameter table in bytes. This must be known to the component so it can construct correct sized memory regions for the downstream components.
+   -- Ticks_Until_Timeout : Natural - The component will wait until it has received at least this many ticks before reporting a timeout error while waiting for a parameter update/fetch response from either the active or default parameter components. For example, if the component is attached to a 10Hz rate group and this value is set to 7, then the component will wait between 700 and 800 ms before declaring a timeout error from an unresponsive downstream component.
    --
    overriding procedure Init (Self : in out Instance; Parameter_Table_Length : in Natural; Ticks_Until_Timeout : in Natural) is
    begin
@@ -36,7 +36,7 @@ package body Component.Parameter_Manager.Implementation is
    ---------------------------------------
    -- Invokee connector primitives:
    ---------------------------------------
-   -- The component should be attached to a periodic tick that is used to timeout waiting for a parameter update/fetch response. See the ticks_Until_Timeout initialization parameter.
+   -- The component should be attached to a periodic tick that is used to timeout waiting for a parameter update/fetch response. See the Ticks_Until_Timeout initialization parameter.
    overriding procedure Timeout_Tick_Recv_Sync (Self : in out Instance; Arg : in Tick.T) is
       Ignore : Tick.T renames Arg;
    begin

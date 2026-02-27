@@ -16,5 +16,5 @@ petters:
     critical: False # Make True to stop servicing downstream HW watchdog
     fault_id: 2
   # We don't need to monitor the Watchdog_Rate_Group since the
-  # task watchdog is on that rate group. That makes it a defacto critical
+  # task watchdog is on that rate group. That makes it a de facto critical
   # task, which will stop petting the watchdog if it freezes up.
