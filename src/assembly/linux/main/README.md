@@ -141,7 +141,7 @@ You should see the software respond by printing out `Interrupt received` with a 
 
  ![`Commanding and Telemetry with Hydra`](../../pico/main/img/hydra.jpg "Commanding and Telemetry with Hydra")
 
-*Note that Hydra is not yet publicly available, but will be made so in the future. The instructions below serve as an example of how you could interact with this assembly with any ground system.*
+*Note that Hydra is not yet publicly available, but will be made available in the future. The instructions below serve as an example of how you could interact with this assembly with any ground system.*
 
 To best interact with the Linux assembly, we need to use a ground system interface, such as Hydra. Before running
 Hydra we need to build the Hydra configuration files. This will allow Hydra to decode telemetry from the Linux assembly and properly format
@@ -169,7 +169,7 @@ With Hydra running, here are some interesting things you can try:
  2. View telemetry from the Counter and Oscillator components by opening the `Display Page -> custom -> plots` panel.
  3. Send any command by double clicking a line in the `View -> All Commands` panel. Try sending a NOOP or changing the Oscillator frequencies.
  4. View the queue usage for each component by opening the `Display Page -> linux_example -> linux_example_queue_monitor` panel.
- 5. Send an interrupt to the running assembly by running `sh send_interrupt.sh` from a new SSH session within within the Linux environment. You should see the software respond by printing out `Interrupt received` with a time stamp in the terminal where `redo run` was started.
+ 5. Send an interrupt to the running assembly by running `sh send_interrupt.sh` from a new SSH session within the Linux environment. You should see the software respond by printing out `Interrupt received` with a time stamp in the terminal where `redo run` was started.
 
 ## What's Next
 

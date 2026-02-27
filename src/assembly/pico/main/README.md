@@ -26,7 +26,7 @@ which does not allow for debugging.
 
  ![`Pico with Debug Probe`](img/pico_probe.jpg "Pico with Debug Probe")
 
-Setup the Pico as shown above with the following connections ([detailed pinout](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf)):
+Set up the Pico as shown above with the following connections ([detailed pinout](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf)):
 
  1. USB from PC to Pico Micro-USB connector
  2. USB from PC to Debug Probe Micro-USB connector
@@ -40,7 +40,7 @@ Setup the Pico as shown above with the following connections ([detailed pinout](
 
  ![`Pico with USB to Serial`](img/pico_usb.jpg "Pico with USB to Serial")
 
-Setup the Pico as shown above with the following connections ([detailed pinout](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf)):
+Set up the Pico as shown above with the following connections ([detailed pinout](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf)):
 
  1. USB from PC to Pico Micro-USB connector
  2. USB to TTL serial cable from PC breaks out to three pins (male)
@@ -93,9 +93,9 @@ $ gdb build/bin/Pico/main.elf
 > continue
 ```
 
-From here you can use GDB as you normally would to set break points, pause the program, etc.
+From here you can use GDB as you normally would to set breakpoints, pause the program, etc.
 
-You can verify that telemetry is being produced by the Pico by opening the USB serial device on your PC with a program like minicom or screen with a baud rate of 115200, ie.
+You can verify that telemetry is being produced by the Pico by opening the USB serial device on your PC with a program like minicom or screen with a baud rate of 115200, e.g.
 
 ```
 $ screen /dev/ttyACM0 115200
@@ -112,7 +112,7 @@ The Pico can act like a USB storage device, allowing you to program it by simply
 
  ![`Copy main.uf2 to RPI-RP2 device`](img/copy_uf2.png "Copy main.uf2 to RPI-RP2 device")
 
-You can verify that telemetry is being produced by the Pico by opening the USB serial device on your PC with a program like minicom or screen with a baud rate of 115200, ie.
+You can verify that telemetry is being produced by the Pico by opening the USB serial device on your PC with a program like minicom or screen with a baud rate of 115200, e.g.
 
 ```
 $ screen /dev/ttyACM0 115200
@@ -257,7 +257,7 @@ This can take a while to build, but you should see event text output once it is 
 
  ![`Commanding and Telemetry with Hydra`](img/hydra.jpg "Commanding and Telemetry with Hydra")
 
-*Note that Hydra is not yet publicly available, but will be made so in the future. The instructions below serve as an example of how you could interact with this assembly with any ground system.*
+*Note that Hydra is not yet publicly available, but will be made available in the future. The instructions below serve as an example of how you could interact with this assembly with any ground system.*
 
 To best interact with the Pico, we need to use a ground system interface, such as Hydra. Before running
 Hydra we need to build the Hydra configuration files. This will allow Hydra to decode telemetry from the Pico and properly format

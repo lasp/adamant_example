@@ -200,7 +200,7 @@ components:
     init_base:
       - "Queue_Size => 3 * Product_Packetizer_Instance.Get_Max_Queue_Element_Size"
     discriminant:
-      - "packet_List => Linux_Example_Product_Packets.Packet_List'Access"
+      - "Packet_List => Linux_Example_Product_Packets.Packet_List'Access"
     init:
   - type: Ccsds_Packetizer
     description: This component converts Adamant formatted packets to CCSDS for downlink.
