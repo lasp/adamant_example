@@ -10,8 +10,8 @@ with:
   - Linux_Example_Events
   - Linux_Example_Data_Products
   - Logger_Enums
+  - Ccsds_Command_Depacketizer_Enums
   - Tick_Interrupt_Handler
-  - Logger_Enums
   - Linux_Example_Task_Watchdog_List
   - Linux_Example_Fault_Responses
   - Linux_Example_Parameter_Table
@@ -85,6 +85,9 @@ components:
 ########################################
   - type: Ccsds_Command_Depacketizer
     description: This component converts CCSDS packets containing commands to valid Adamant formatted command types.
+    init:
+      - "Check_Checksum => True"
+      - "Trailing_Bytes_Source => Ccsds_Command_Depacketizer_Enums.Trailing_Bytes_Sources.Function_Code"
   - type: Command_Router
     description: This component provides command and command response routing throughout the assembly.
     priority: 8
