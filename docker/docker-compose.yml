@@ -10,6 +10,8 @@ services:
                     - linux/amd64
                     - linux/arm64
         container_name: adamant_example_container
+        # The entrypoint needs root to set the user's ids, then drops to "user".
+        user: root
         volumes:
             - type: bind
               source: ../../adamant
@@ -20,4 +22,10 @@ services:
         network_mode: host
         extra_hosts:
             - host.docker.internal:host-gateway
-        command: sleep infinity
+        command: ["/bin/sh", "/home/user/adamant_example/docker/entrypoint.sh", "sleep", "infinity"]
+        # Healthy once the entrypoint has set the ids; `up --wait` waits for it.
+        healthcheck:
+            test: ["CMD", "test", "-f", "/run/entrypoint-ready"]
+            start_period: 1m
+            start_interval: 1s
+            interval: 30s
