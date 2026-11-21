@@ -131,6 +131,9 @@ components:
     init:
   - type: Ccsds_Packetizer
     description: This component converts Adamant formatted packets to CCSDS for downlink.
+    init:
+      - "Crc_Enabled => True"
+      - "Num_Trailing_Bytes_To_Add => 0"
   - type: Ccsds_Serial_Interface
     description: This component manages the Raspberry Pi Pico UART interface for command uplink and telemetry downlink.
     priority: 1

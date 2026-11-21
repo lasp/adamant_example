@@ -207,6 +207,9 @@ components:
     init:
   - type: Ccsds_Packetizer
     description: This component converts Adamant formatted packets to CCSDS for downlink.
+    init:
+      - "Crc_Enabled => True"
+      - "Num_Trailing_Bytes_To_Add => 0"
   - type: Ccsds_Socket_Interface
     description: This component receives commands from and sends events and telemetry packets through a TCP/IP Socket.
     priority: 6
