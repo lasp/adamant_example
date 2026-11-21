@@ -273,6 +273,11 @@ components:
     description: This component periodically produces an oscillating data product.
     init_base:
       - "Queue_Size => 3 * Oscillator_B.Get_Max_Queue_Element_Size"
+    # Start this oscillator with different default parameter values than
+    # Oscillator_A. Offset keeps the default from the component's model.
+    set_parameter_defaults:
+      - "Frequency => (Value => 0.35)"
+      - "Amplitude => (Value => 2.5)"
 ########################################
 # Fault protection system:
 ########################################
