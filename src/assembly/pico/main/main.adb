@@ -33,6 +33,8 @@ begin
    Pico_Example.Init_Base;
    -- Pico_Uart.Put_Line ("Set_Id_Bases");
    Pico_Example.Set_Id_Bases;
+   -- Pico_Uart.Put_Line ("Set_Parameter_Defaults");
+   Pico_Example.Set_Parameter_Defaults;
    -- Pico_Uart.Put_Line ("Connect_Components");
    Pico_Example.Connect_Components;
    -- Pico_Uart.Put_Line ("Init_Components");

@@ -12,6 +12,7 @@ begin
    ---- Set up the assembly:
    Linux_Example.Init_Base;
    Linux_Example.Set_Id_Bases;
+   Linux_Example.Set_Parameter_Defaults;
    Linux_Example.Connect_Components;
    Linux_Example.Init_Components;
 

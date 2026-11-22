@@ -207,6 +207,9 @@ components:
     init:
   - type: Ccsds_Packetizer
     description: This component converts Adamant formatted packets to CCSDS for downlink.
+    init:
+      - "Crc_Enabled => True"
+      - "Num_Trailing_Bytes_To_Add => 0"
   - type: Ccsds_Socket_Interface
     description: This component receives commands from and sends events and telemetry packets through a TCP/IP Socket.
     priority: 6
@@ -270,6 +273,11 @@ components:
     description: This component periodically produces an oscillating data product.
     init_base:
       - "Queue_Size => 3 * Oscillator_B.Get_Max_Queue_Element_Size"
+    # Start this oscillator with different default parameter values than
+    # Oscillator_A. Offset keeps the default from the component's model.
+    set_parameter_defaults:
+      - "Frequency => (Value => 0.35)"
+      - "Amplitude => (Value => 2.5)"
 ########################################
 # Fault protection system:
 ########################################
