@@ -56,8 +56,8 @@ usage() {
 
 case $1 in
   start )
-    execute "${DOCKER_COMPOSE_COMMAND} -f ${DOCKER_COMPOSE_CONFIG} up --pull \"missing\" -d"
-    execute "${DOCKER_COMPOSE_COMMAND} -f ${DOCKER_COMPOSE_CONFIG} exec ${PROJECT_NAME} bash -c \"\
+    execute "${DOCKER_COMPOSE_COMMAND} -f ${DOCKER_COMPOSE_CONFIG} up --pull \"missing\" -d --wait"
+    execute "${DOCKER_COMPOSE_COMMAND} -f ${DOCKER_COMPOSE_CONFIG} exec -u user ${PROJECT_NAME} bash -c \"\
       if [ ! -f /home/user/.initialized ]; \
       then source /home/user/${PROJECT_NAME}/env/activate && touch /home/user/.initialized; \
       fi;\""
